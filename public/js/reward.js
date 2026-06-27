@@ -15,7 +15,7 @@ export function showRewardPopup() {
   const popup = document.getElementById("rewardPopup");
   if (!popup) return;
 
-  document.getElementById("rewardDisplay").textContent    = rewardData.text;
+  document.getElementById("rewardDisplay").textContent = rewardData.text;
   document.getElementById("rewardRoundCount").textContent = state.counts.pomodoro;
   startRewardTimer(rewardData.mins * 60);
   popup.classList.add("show");
@@ -52,7 +52,7 @@ export function initReward() {
     closeRewardPopup();
     const ep = document.getElementById("rewardEditPopup");
     if (!ep) return;
-    document.getElementById("rewardInput").value         = rewardData.text;
+    document.getElementById("rewardInput").value = rewardData.text;
     document.getElementById("rewardDurationInput").value = rewardData.mins;
     ep.classList.add("show");
   });
@@ -64,7 +64,7 @@ export function initReward() {
   document.getElementById("rewardEditSaveBtn")?.addEventListener("click", () => {
     const text = document.getElementById("rewardInput").value.trim();
     const mins = parseInt(document.getElementById("rewardDurationInput").value, 10);
-    if (text)   rewardData.text = text;
+    if (text) rewardData.text = text;
     if (mins > 0) rewardData.mins = mins;
     localStorage.setItem("pomodoroReward", JSON.stringify(rewardData));
     document.getElementById("rewardEditPopup")?.classList.remove("show");
