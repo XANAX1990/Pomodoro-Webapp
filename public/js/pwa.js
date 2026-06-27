@@ -1,0 +1,44 @@
+// pwa.js — PWA registration + Web Notification helper
+
+/* ── Service Worker ── */
+export async function registerServiceWorker() {
+  if (!("serviceWorker" in navigator)) return;
+  try {
+    const reg = await navigator.serviceWorker.register("service-worker.js");
+    console.log("Service Worker registered:", reg.scope);
+  } catch (e) {
+    console.warn("Service Worker registration failed:", e);
+  }
+}
+
+/* ── Web Notifications ── */
+export async function requestNotificationPermission() {
+  if (!("Notification" in window)) return "unsupported";
+  if (Notification.permission === "granted") return "granted";
+  if (Notification.permission === "denied") return "denied";
+  const result = await Notification.requestPermission();
+  return result;
+}
+
+export function sendTimerNotification(mode) {
+  if (!("Notification" in window) || Notification.permission !== "granted") return;
+
+  const messages = {
+    pomodoro: { title: "🍅 Pomodoro จบแล้ว!", body: "ได้เวลาพักแล้ว ยืดเส้นยืดสายหน่อยนะ 🧘" },
+    rest: { title: "⏰ หมดเวลาพัก!", body: "กลับมาโฟกัสกันต่อเลย 💪" },
+    long: { title: "🎉 Long Break จบแล้ว!", body: "ทำได้ดีมาก! พร้อมไปต่อไหม?" },
+  };
+
+  const msg = messages[mode] || messages.pomodoro;
+  try {
+    new Notification(msg.title, {
+      body: msg.body,
+      icon: "/icons/pwa-192.png",
+      badge: "/icons/pwa-192.png",
+      tag: "pomodoro-timer",
+      renotify: true,
+    });
+  } catch (e) {
+    console.warn("Notification failed:", e);
+  }
+}
