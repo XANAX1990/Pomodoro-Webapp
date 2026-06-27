@@ -1,6 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-analytics.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app-check.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyDOOWMg9quYz0YSVZAH89sttzBn9go0rlM",
@@ -13,6 +14,13 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
+
+// App Check — ป้องกัน SDK ถูกเรียกจากแหล่งที่ไม่ใช่เว็บจริง (spam/bot)
+initializeAppCheck(app, {
+    provider: new ReCaptchaEnterpriseProvider("6LFeJktAAAAAEu8nzOtN3WOKDl9vZ3U1hdm7dcu"),
+    isTokenAutoRefreshEnabled: true,
+});
+
 const analytics = getAnalytics(app);
 const db = getFirestore(app);
 
