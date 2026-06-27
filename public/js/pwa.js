@@ -6,6 +6,26 @@ export async function registerServiceWorker() {
   try {
     const reg = await navigator.serviceWorker.register("service-worker.js");
     console.log("Service Worker registered:", reg.scope);
+
+    // พบ SW เวอร์ชันใหม่ → สั่งเข้าควบคุมทันที
+    reg.addEventListener("updatefound", () => {
+      const newWorker = reg.installing;
+      if (!newWorker) return;
+      newWorker.addEventListener("statechange", () => {
+        // เมื่อ SW ใหม่ติดตั้งเสร็จและรออยู่ → สั่งให้เข้าควบคุม
+        if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+          newWorker.postMessage("SKIP_WAITING");
+        }
+      });
+    });
+
+    // เมื่อ SW ใหม่เข้าควบคุมแล้ว → reload เพื่อโหลดโค้ดใหม่
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      if (refreshing) return;
+      refreshing = true;
+      window.location.reload();
+    });
   } catch (e) {
     console.warn("Service Worker registration failed:", e);
   }

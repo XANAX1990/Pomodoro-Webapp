@@ -1,6 +1,6 @@
 import { presets } from "./config.js";
 import { state } from "./state.js";
-import { formatTime } from "./utils.js";
+import { formatTime, durationFor } from "./utils.js";
 
 let els;
 const isAdhdPage = document.body.classList.contains("page-adhd");
@@ -21,13 +21,6 @@ const MODE_COLORS = {
     long: { border: "#581c87", bg: "#3b0764" }
   }
 };
-
-function durationFor(mode = state.mode) {
-  const preset = presets[state.preset];
-  if (mode === "pomodoro") return preset.pomodoro * 60;
-  if (mode === "rest") return preset.rest * 60;
-  return preset.long * 60;
-}
 
 function updateHourglassProgress() {
   if (!isAdhdPage || !els.timerCircle) return;

@@ -1,6 +1,6 @@
 import { presets } from "./config.js";
 import { state } from "./state.js";
-import { formatTime } from "./utils.js";
+import { formatTime, durationFor } from "./utils.js";
 
 let els;
 let onTickRender; // callback into render.js, injected to avoid circular import
@@ -10,12 +10,7 @@ export function initTimer(elements, renderCallback) {
   onTickRender = renderCallback;
 }
 
-export function durationFor(mode = state.mode) {
-  const preset = presets[state.preset];
-  if (mode === "pomodoro") return preset.pomodoro * 60;
-  if (mode === "rest") return preset.rest * 60;
-  return preset.long * 60;
-}
+export { durationFor };
 
 export function setMode(mode, reset = true) {
   state.mode = mode;

@@ -1,5 +1,5 @@
 // service-worker.js
-const CACHE_NAME = "pomodoro-v2";
+const CACHE_NAME = "pomodoro-v3";
 
 const STATIC_FILES = [
   "/",
@@ -38,9 +38,14 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
       Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
-    )
+    ).then(() => self.clients.claim())
   );
-  self.clients.claim();
+});
+
+// หลัง SW ใหม่เข้าควบคุม → สั่งหน้าเว็บที่เปิดอยู่ให้ reload
+// เพื่อป้องกันไม่ให้ผู้ใช้ติดอยู่กับโค้ดเวอร์ชันเก่าผสมใหม่
+self.addEventListener("message", (event) => {
+  if (event.data === "SKIP_WAITING") self.skipWaiting();
 });
 
 // Fetch — cache-first for static, network-first for Firebase
