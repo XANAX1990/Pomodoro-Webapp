@@ -4,21 +4,21 @@ import { getFirestore } from "https://www.gstatic.com/firebasejs/12.14.0/firebas
 import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app-check.js";
 
 const firebaseConfig = {
-    apiKey: "AIzaSyDOOWMg9quYz0YSVZAH89sttzBn9go0rlM",
-    authDomain: "pomodoro-webapp-870c6.firebaseapp.com",
-    projectId: "pomodoro-webapp-870c6",
-    storageBucket: "pomodoro-webapp-870c6.firebasestorage.app",
-    messagingSenderId: "497803327887",
-    appId: "1:497803327887:web:48ab2eeba9af19d75ef3fa",
-    measurementId: "G-14KX411GYT"
+  apiKey: "AIzaSyDOOWMg9quYz0YSVZAH89sttzBn9go0rlM",
+  authDomain: "pomodoro-webapp-870c6.firebaseapp.com",
+  projectId: "pomodoro-webapp-870c6",
+  storageBucket: "pomodoro-webapp-870c6.firebasestorage.app",
+  messagingSenderId: "497803327887",
+  appId: "1:497803327887:web:48ab2eeba9af19d75ef3fa",
+  measurementId: "G-14KX411GYT"
 };
 
 const app = initializeApp(firebaseConfig);
 
 // App Check — ป้องกัน SDK ถูกเรียกจากแหล่งที่ไม่ใช่เว็บจริง (spam/bot)
 initializeAppCheck(app, {
-    provider: new ReCaptchaEnterpriseProvider("6LFeJktAAAAAEu8nzOtN3WOKDl9vZ3U1hdm7dcu"),
-    isTokenAutoRefreshEnabled: true,
+  provider: new ReCaptchaEnterpriseProvider("6LfEJjktAAAAAEu8nzOtN3WOKDl9vZ3U1hdm7dcu"),
+  isTokenAutoRefreshEnabled: true,
 });
 
 const analytics = getAnalytics(app);
