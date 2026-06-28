@@ -23,6 +23,8 @@ const STATIC_FILES = [
   "/js/reward.js",
   "/js/milestone.js",
   "/js/pwa.js",
+  "/icons/PWA512.png",
+  "/icons/PWA192.png"
 ];
 
 // Install — cache static files
