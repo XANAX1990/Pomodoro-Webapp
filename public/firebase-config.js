@@ -18,7 +18,7 @@ const app = initializeApp(firebaseConfig);
 
 // App Check — ป้องกัน SDK ถูกเรียกจากแหล่งที่ไม่ใช่เว็บจริง (spam/bot)
 initializeAppCheck(app, {
-  provider: new ReCaptchaEnterpriseProvider("6LfEJjktAAAAAEu8nzOtN3WOKDl9vZ3U1hdm7dcu"),
+  provider: new ReCaptchaEnterpriseProvider("6LdzIDktAAAAAJVDd9_hmRzbQw-NR7QDFppF4eZL"),
   isTokenAutoRefreshEnabled: true,
 });
 
