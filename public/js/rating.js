@@ -1,9 +1,24 @@
 // rating.js — Star Rating + FAB logic
-import { db } from "../firebase-config.js";
+import { db, auth } from "../firebase-config.js";
 import { collection, addDoc } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+import { signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
 
 let els;
 let selectedRating = 0;
+
+// ตรวจสอบว่า user ได้ sign-in แล้วหรือยัง ถ้ายังให้ sign-in แบบ anonymous
+let _authReady = null;
+function ensureAuth() {
+  if (!_authReady) {
+    _authReady = new Promise((resolve) => {
+      onAuthStateChanged(auth, (user) => {
+        if (user) return resolve(user);
+        signInAnonymously(auth).then(resolve).catch(resolve);
+      });
+    });
+  }
+  return _authReady;
+}
 
 // FAB elements
 let fabBtn, fabIconStar, fabIconClose;
@@ -11,8 +26,8 @@ let fabBtn, fabIconStar, fabIconClose;
 export function initRating(elements) {
   els = elements;
 
-  fabBtn       = document.getElementById("fabBtn");
-  fabIconStar  = fabBtn?.querySelector(".fab-icon-star");
+  fabBtn = document.getElementById("fabBtn");
+  fabIconStar = fabBtn?.querySelector(".fab-icon-star");
   fabIconClose = fabBtn?.querySelector(".fab-icon-close");
 
   _bindStars();
@@ -25,12 +40,12 @@ export function setFabOpen(open) {
   if (!fabBtn) return;
   if (open) {
     els.rating_container?.classList.add("show");
-    if (fabIconStar)  fabIconStar.style.display  = "none";
+    if (fabIconStar) fabIconStar.style.display = "none";
     if (fabIconClose) fabIconClose.style.display = "";
     fabBtn.classList.add("fab-open");
   } else {
     els.rating_container?.classList.remove("show");
-    if (fabIconStar)  fabIconStar.style.display  = "";
+    if (fabIconStar) fabIconStar.style.display = "";
     if (fabIconClose) fabIconClose.style.display = "none";
     fabBtn.classList.remove("fab-open");
   }
@@ -68,7 +83,7 @@ function _bindStars() {
 /* ── Modal (Yes/No → Rating → Success) ── */
 function _resetSuccessAnim() {
   const circle = document.querySelector(".check-circle");
-  const check  = document.querySelector(".check-mark");
+  const check = document.querySelector(".check-mark");
   if (!circle || !check) return;
   [circle, check].forEach((el) => {
     el.style.animation = "none";
@@ -80,6 +95,7 @@ function _resetSuccessAnim() {
 async function _saveScore(scoreValue) {
   if (!scoreValue || scoreValue <= 0) return;
   try {
+    await ensureAuth();
     const docRef = await addDoc(collection(db, "ratings"), {
       rating: scoreValue,
       timestamp: new Date(),
