@@ -102,6 +102,18 @@ a {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 480px;
   min-height: calc(100vh - 128px);
+  transition: grid-template-columns 0.3s ease;
+}
+
+.workspace.tasks-collapsed {
+  grid-template-columns: minmax(0, 1fr) 48px;
+}
+
+/* ── Tasks column wrapper (tasks-pane + FAB) ── */
+.tasks-col {
+  position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
 .timer-pane {
@@ -413,8 +425,55 @@ a {
 .tasks-pane {
   position: relative;
   border-left: 1px solid #d7d7d7;
-  padding: 24px 28px;
   background: #fff;
+  overflow: hidden;
+  flex: 1;
+  transition: width 0.3s ease;
+}
+
+.tasks-inner {
+  padding: 24px 28px;
+  width: 432px;
+  /* 480px column - 48px toggle btn */
+}
+
+/* Toggle button on the left edge of tasks-pane */
+.tasks-toggle-btn {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 48px;
+  background: #f0f4ff;
+  border: none;
+  border-right: 1px solid #dde4ef;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #2f68df;
+  z-index: 10;
+  border-radius: 0 6px 6px 0;
+  transition: background 0.15s ease;
+  padding: 0;
+  box-shadow: none;
+}
+
+.tasks-toggle-btn:hover {
+  background: #dce8ff;
+}
+
+.tasks-inner {
+  padding: 24px 28px 24px 32px;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+/* Collapsed state */
+.tasks-pane.collapsed .tasks-inner {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(20px);
 }
 
 .tasks-header {
@@ -1733,9 +1792,10 @@ html.dark-mode .hourglass-neck {
 
 /* ===================== FAB + Star Rating ===================== */
 .fab {
-  position: fixed;
-  right: calc(480px + 24px);
-  bottom: 64px;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 80px;
   width: 52px;
   height: 52px;
   border-radius: 50%;
@@ -1753,7 +1813,6 @@ html.dark-mode .hourglass-neck {
 
 .fab:hover {
   background: #1f56c8;
-  transform: scale(1.08);
   box-shadow: 0 6px 22px rgba(47, 104, 223, 0.55);
 }
 
@@ -2388,8 +2447,13 @@ html.dark-mode .milestone-toast {
   border-left-color: #93b4ff;
 }
 
-html.dark-mode .milestone-text strong { color: #93b4ff; }
-html.dark-mode .milestone-text span   { color: #94a3b8; }
+html.dark-mode .milestone-text strong {
+  color: #93b4ff;
+}
+
+html.dark-mode .milestone-text span {
+  color: #94a3b8;
+}
 
 @media (max-width: 600px) {
   .milestone-toast {

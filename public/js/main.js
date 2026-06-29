@@ -210,3 +210,19 @@ updateMusic();
 // PWA init
 registerServiceWorker();
 requestNotificationPermission();
+/* ---------- Tasks panel toggle ---------- */
+const tasksToggleBtn = document.getElementById("tasksToggleBtn");
+const tasksPane = document.getElementById("tasksPane");
+const workspace = document.querySelector(".workspace");
+const iconClose = tasksToggleBtn?.querySelector(".tasks-toggle-icon--close");
+const iconOpen = tasksToggleBtn?.querySelector(".tasks-toggle-icon--open");
+
+let tasksOpen = true;
+
+tasksToggleBtn?.addEventListener("click", () => {
+  tasksOpen = !tasksOpen;
+  tasksPane.classList.toggle("collapsed", !tasksOpen);
+  workspace.classList.toggle("tasks-collapsed", !tasksOpen);
+  if (iconClose) iconClose.style.display = tasksOpen ? "" : "none";
+  if (iconOpen) iconOpen.style.display = tasksOpen ? "none" : "";
+});
