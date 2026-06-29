@@ -223,6 +223,7 @@ tasksToggleBtn?.addEventListener("click", () => {
   tasksOpen = !tasksOpen;
   tasksPane.classList.toggle("collapsed", !tasksOpen);
   workspace.classList.toggle("tasks-collapsed", !tasksOpen);
+  document.body.classList.toggle("tasks-collapsed", !tasksOpen);
   if (iconClose) iconClose.style.display = tasksOpen ? "" : "none";
   if (iconOpen) iconOpen.style.display = tasksOpen ? "none" : "";
 });

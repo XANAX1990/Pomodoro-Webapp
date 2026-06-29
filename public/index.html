@@ -247,52 +247,37 @@
       </section>
 
       <div class="tasks-col" id="tasksCol">
-        <aside class="tasks-pane" id="tasksPane" aria-label="Tasks">
-          <button class="tasks-toggle-btn" id="tasksToggleBtn" aria-label="Toggle tasks panel">
-            <svg class="tasks-toggle-icon tasks-toggle-icon--close" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="18"
-              height="18">
-              <polyline points="9 18 15 12 9 6" />
-            </svg>
-            <svg class="tasks-toggle-icon tasks-toggle-icon--open" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-              stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"
-              style="display:none">
-              <polyline points="15 18 9 12 15 6" />
-            </svg>
-          </button>
-          <div class="tasks-inner">
-            <div class="tasks-header">
-              <strong>Tasks <span id="taskCount">0</span></strong>
-              <button class="more-btn" id="tasksMenuBtn" aria-label="Task options">•••</button>
-            </div>
-            <form class="task-form" id="taskForm">
-              <button type="submit" aria-label="Add task">+</button>
-              <div class="task-input-wrap">
-                <input id="taskInput" type="text" placeholder="Add tasks here!" autocomplete="off" maxlength="200" />
-              </div>
-              <div class="task-form-actions" id="taskFormActions" hidden>
-                <button type="submit" class="task-action-btn task-add-btn">Add</button>
-                <button type="button" class="task-action-btn task-cancel-btn" id="taskCancelBtn">Cancel</button>
-              </div>
-            </form>
-            <ul class="task-list" id="taskList"></ul>
-            <div class="task-menu" id="taskMenu" hidden>
-              <button id="clearDoneBtn">Clear completed</button>
-              <button id="clearAllBtn">Clear all tasks</button>
-            </div>
-          </div><!-- /tasks-inner -->
-        </aside>
-        <!-- FAB lives here so it follows the tasks column -->
-        <button class="fab" id="fabBtn" aria-label="Rate your session">
-          <svg class="fab-icon-star" viewBox="0 0 24 24" fill="currentColor" width="26" height="26">
-            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+      <aside class="tasks-pane" id="tasksPane" aria-label="Tasks">
+        <button class="tasks-toggle-btn" id="tasksToggleBtn" aria-label="Toggle tasks panel">
+          <svg class="tasks-toggle-icon tasks-toggle-icon--close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">
+            <polyline points="9 18 15 12 9 6"/>
           </svg>
-          <svg class="fab-icon-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-            stroke-linecap="round" width="26" height="26" style="display:none">
-            <line x1="18" y1="6" x2="6" y2="18" />
-            <line x1="6" y1="6" x2="18" y2="18" />
+          <svg class="tasks-toggle-icon tasks-toggle-icon--open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" style="display:none">
+            <polyline points="15 18 9 12 15 6"/>
           </svg>
         </button>
+        <div class="tasks-inner">
+        <div class="tasks-header">
+          <strong>Tasks <span id="taskCount">0</span></strong>
+          <button class="more-btn" id="tasksMenuBtn" aria-label="Task options">•••</button>
+        </div>
+        <form class="task-form" id="taskForm">
+          <button type="submit" aria-label="Add task">+</button>
+          <div class="task-input-wrap">
+            <input id="taskInput" type="text" placeholder="Add tasks here!" autocomplete="off" maxlength="200" />
+          </div>
+          <div class="task-form-actions" id="taskFormActions" hidden>
+            <button type="submit" class="task-action-btn task-add-btn">Add</button>
+            <button type="button" class="task-action-btn task-cancel-btn" id="taskCancelBtn">Cancel</button>
+          </div>
+        </form>
+        <ul class="task-list" id="taskList"></ul>
+        <div class="task-menu" id="taskMenu" hidden>
+          <button id="clearDoneBtn">Clear completed</button>
+          <button id="clearAllBtn">Clear all tasks</button>
+        </div>
+        </div><!-- /tasks-inner -->
+      </aside>
       </div><!-- /tasks-col -->
     </main>
 
@@ -393,6 +378,18 @@
         <button id="okBtn">OK</button>
       </div>
     </div>
+
+
+    <!-- FAB Button -->
+    <button class="fab" id="fabBtn" aria-label="Rate your session">
+      <svg class="fab-icon-star" viewBox="0 0 24 24" fill="currentColor" width="26" height="26">
+        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+      </svg>
+      <svg class="fab-icon-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="26" height="26" style="display:none">
+        <line x1="18" y1="6" x2="6" y2="18" />
+        <line x1="6" y1="6" x2="18" y2="18" />
+      </svg>
+    </button>
 
   </div> <!-- /app-shell -->
 

@@ -1792,9 +1792,8 @@ html.dark-mode .hourglass-neck {
 
 /* ===================== FAB + Star Rating ===================== */
 .fab {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
+  position: fixed;
+  right: calc(480px + 24px);
   bottom: 80px;
   width: 52px;
   height: 52px;
@@ -1808,11 +1807,18 @@ html.dark-mode .hourglass-neck {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+  transition: background 0.18s ease, transform 0.18s ease,
+    box-shadow 0.18s ease, right 0.3s ease;
+}
+
+/* FAB follows when tasks panel collapses */
+body.tasks-collapsed .fab {
+  right: calc(48px + 24px);
 }
 
 .fab:hover {
   background: #1f56c8;
+  transform: scale(1.08);
   box-shadow: 0 6px 22px rgba(47, 104, 223, 0.55);
 }
 
