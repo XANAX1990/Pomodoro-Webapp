@@ -6,7 +6,6 @@ import { signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/f
 let els;
 let selectedRating = 0;
 
-// ตรวจสอบว่า user ได้ sign-in แล้วหรือยัง ถ้ายังให้ sign-in แบบ anonymous
 let _authReady = null;
 function ensureAuth() {
   if (!_authReady) {
