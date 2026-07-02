@@ -1,5 +1,5 @@
 // service-worker.js
-const CACHE_NAME = "pomodoro-02-07-2025-2";
+const CACHE_NAME = "pomodoro-02-07-2025-3";
 
 const STATIC_FILES = [
   "/",
@@ -24,7 +24,8 @@ const STATIC_FILES = [
   "/js/milestone.js",
   "/js/pwa.js",
   "/icons/PWA512.png",
-  "/icons/PWA192.png"
+  "/icons/PWA192.png",
+  "/icons/favicon.png"
 ];
 
 // Install — cache static files
