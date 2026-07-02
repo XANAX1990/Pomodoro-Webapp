@@ -1,5 +1,5 @@
 // service-worker.js
-const CACHE_NAME = "pomodoro-v3";
+const CACHE_NAME = "pomodoro-v4";
 
 const STATIC_FILES = [
   "/",
