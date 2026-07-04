@@ -60,8 +60,9 @@
 | **PWA** | Web App Manifest + Service Worker | รองรับการติดตั้งและใช้งาน Offline |
 | **IDE** | Visual Studio Code | พร้อม Live Server Extension |
 | **Version Control** | Git / GitHub | บริหารจัดการ source code |
+| **Security** | Firebase App Check + reCAPTCHA Enterprise + Anonymous Auth | ป้องกันการโจมตี |
 
-> **หมายเหตุ:** เว็บแอปนี้เป็น **Pure Static Site** ไม่ต้องการ Backend Server เนื่องจากข้อมูลส่วนใหญ่ (การตั้งค่า, tasks, รางวัล) จัดเก็บที่ฝั่ง Client ผ่าน localStorage โดยตรง มีเพียงข้อมูลผลประเมินความพึงพอใจที่ส่งไปยัง Firebase Firestore
+**หมายเหตุ:** เว็บแอปนี้เป็น **Pure Static Site** ไม่ต้องการ Backend Server เนื่องจากข้อมูลส่วนใหญ่ (การตั้งค่า, tasks, รางวัล) จัดเก็บที่ฝั่ง Client ผ่าน localStorage โดยตรง มีเพียงข้อมูลผลประเมินความพึงพอใจที่ส่งไปยัง Firebase Firestore
 
 ---
 
@@ -125,13 +126,19 @@ ratings/
 
 **Firestore Security Rules:**
 ```js
-match /ratings/{docId} {
-  allow read: if false;
-  allow create: if request.resource.data.rating is int
-                && request.resource.data.rating >= 1
-                && request.resource.data.rating <= 5
-                && request.resource.data.keys().hasOnly(["rating", "timestamp"]);
-  allow update, delete: if false;
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /ratings/{docId} {
+      allow create: if request.auth != null
+              && request.resource.data.rating is int
+              && request.resource.data.rating >= 1
+              && request.resource.data.rating <= 5
+              && request.resource.data.keys().hasOnly(["rating", "timestamp"]);
+      allow read, update, delete: if false;
+    }
+  }
 }
 ```
 
@@ -177,3 +184,9 @@ match /ratings/{docId} {
 ขั้นตอนที่ 7  ทดสอบระบบ
                └─ Functionality Testing, Database Testing, PWA Testing, Cross-browser Testing
 ```
+
+## Security Layer
+ ├── reCAPTCHA
+ ├── App Check
+ ├── Anonymous Authentication
+ └── Security Rules

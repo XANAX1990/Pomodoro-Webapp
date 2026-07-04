@@ -113,12 +113,12 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     match /ratings/{docId} {
-      allow read: if false;
-      allow create: if request.resource.data.rating is int
-                    && request.resource.data.rating >= 1
-                    && request.resource.data.rating <= 5
-                    && request.resource.data.keys().hasOnly(["rating", "timestamp"]);
-      allow update, delete: if false;
+      allow create: if request.auth != null 
+                        && request.resource.data.keys().hasOnly(["rating", "timestamp"]) &&
+                      request.resource.data.rating is int &&
+                      request.resource.data.rating >= 1 &&
+                      request.resource.data.rating <= 5;
+      allow read, update, delete: if false;
     }
   }
 }
@@ -140,7 +140,7 @@ service cloud.firestore {
 
 ---
 
-## 🧩 Module Architecture
+## Module Architecture
 
 ```
 main.js
@@ -158,6 +158,12 @@ main.js
  ├── pwa.js         Service worker registration + Web Notifications
  └── state.js       single source of truth
 ```
+
+## Security Layer
+ ├── reCAPTCHA
+ ├── App Check
+ ├── Anonymous Authentication
+ └── Security Rules
 
 **Key design decisions:**
 - `render()` and `renderTasks()` are intentionally **separate** — prevents task DOM from rebuilding every second, preserving CSS animations
