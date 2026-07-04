@@ -86,10 +86,11 @@
           </svg>
         </button>
         <hr />
-        <button class="plain-row" id="skipBreakBtn">Skip to Short Break</button>
-        <button class="plain-row" id="skipLongBreakBtn">Skip to Long Break</button>
-      </div>
+        <button class="plain-row" id="skipBreakBtn">Skip to Short Break</button> <!-- ปุ่ม skip break-->
+        <button class="plain-row" id="skipLongBreakBtn">Skip to Long Break</button> <!-- ปุ่ม skip long break-->
+      </div> <!-- Menu Bar-->
 
+      <!-- Menu Detail-->
       <div class="customizer-panel" data-panel="focus" hidden>
         <div class="panel-title">
           <button class="back-btn" data-back aria-label="Back"><svg viewBox="0 0 24 24" fill="none"
@@ -225,7 +226,7 @@
 
     </div>
 
-    <main class="workspace">
+    <main class="workspace"> <!-- main workspace -->
       <section class="timer-pane" aria-label="Pomodoro timer">
 
         <div class="mode-tabs" role="tablist" aria-label="Timer modes">
@@ -234,20 +235,21 @@
           <button class="mode-tab" data-mode="long">Long Break</button>
         </div>
 
-        <div class="timer-circle" id="timerCircle">
+        <div class="timer-circle" id="timerCircle"> <!-- Clock-->
           <div class="time" id="timeDisplay">20:00</div>
           <span>Level</span>
           <strong id="levelName">Popular</strong>
         </div>
 
-        <button class="start-btn" id="startBtn">Start</button>
+        <button class="start-btn" id="startBtn">Start</button> <!-- Start button-->
         <div class="split-control" id="runningControls" hidden>
-          <button class="split-btn split-left" id="pauseBtn">Pause</button>
-          <button class="split-btn split-right" id="finishBtn">Finish?</button>
+          <button class="split-btn split-left" id="pauseBtn">Pause</button> <!-- pause button-->
+          <button class="split-btn split-right" id="finishBtn">Finish?</button> <!-- finish button-->
         </div>
       </section>
 
-      <div class="tasks-col" id="tasksCol">
+      <!-- tasks-col -->
+      <div class="tasks-col" id="tasksCol"> 
         <aside class="tasks-pane" id="tasksPane" aria-label="Tasks">
           <button class="tasks-toggle-btn" id="tasksToggleBtn" aria-label="Toggle tasks panel">
             <svg class="tasks-toggle-icon tasks-toggle-icon--close" viewBox="0 0 24 24" fill="none"
@@ -286,13 +288,15 @@
       </div><!-- /tasks-col -->
     </main>
 
+    <!-- Dropdown Playlist -->
     <div class="dropdown playlist-menu" id="playlistMenu">
       <div class="panel-title" style="margin-bottom: 12px; font-size: 18px; font-weight: 700;">
         <strong>Playlist</strong>
       </div>
       <div class="playlist-folders" id="playlistFolders"></div>
     </div>
-
+    
+    <!--Audio Bar -->
     <div class="audio-bar">
       <button class="icon-only" id="playlistBtn" aria-label="Playlist">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">

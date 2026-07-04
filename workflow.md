@@ -59,10 +59,10 @@
 | **Hosting** | Firebase Hosting | Deploy และให้บริการ Static Site |
 | **PWA** | Web App Manifest + Service Worker | รองรับการติดตั้งและใช้งาน Offline |
 | **IDE** | Visual Studio Code | พร้อม Live Server Extension |
-| **Version Control** | Git / GitHub | บริหารจัดการ source code |
+| **Version Control** | Git / GitHub | บริหารจัดการ source code | 
 | **Security** | Firebase App Check + reCAPTCHA Enterprise + Anonymous Auth | ป้องกันการโจมตี |
 
-**หมายเหตุ:** เว็บแอปนี้เป็น **Pure Static Site** ไม่ต้องการ Backend Server เนื่องจากข้อมูลส่วนใหญ่ (การตั้งค่า, tasks, รางวัล) จัดเก็บที่ฝั่ง Client ผ่าน localStorage โดยตรง มีเพียงข้อมูลผลประเมินความพึงพอใจที่ส่งไปยัง Firebase Firestore
+> **หมายเหตุ:** เว็บแอปนี้เป็น **Pure Static Site** ไม่ต้องการ Backend Server เนื่องจากข้อมูลส่วนใหญ่ (การตั้งค่า, tasks, รางวัล) จัดเก็บที่ฝั่ง Client ผ่าน localStorage โดยตรง มีเพียงข้อมูลผลประเมินความพึงพอใจที่ส่งไปยัง Firebase Firestore
 
 ---
 
