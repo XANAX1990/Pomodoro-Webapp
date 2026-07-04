@@ -1301,6 +1301,10 @@ footer a {
   top: 8px;
 }
 
+.dark-mode .mobile-menu span {
+  background: #fff;
+}
+
 .mobile-menu span:nth-child(2) {
   top: 15px;
 }
