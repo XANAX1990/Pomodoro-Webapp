@@ -24,7 +24,7 @@ function tick() {
 
   // Milestone: ทุก 5 นาที ระหว่าง Pomodoro
   if (state.mode === "pomodoro" && state.running) {
-    const total   = durationFor("pomodoro");
+    const total = durationFor("pomodoro");
     const elapsed = total - state.remaining;
     if (elapsed > 0 && elapsed % 300 === 0) {
       onMilestoneRef?.(elapsed / 60); // ส่งจำนวนนาทีที่ผ่านไป
@@ -43,6 +43,11 @@ export function toggleTimer(force, toggleDarkMode) {
   state.running = shouldRun;
   clearInterval(state.timerId);
 
+  if (state.autoDarkTimeoutId) {
+    clearTimeout(state.autoDarkTimeoutId);
+    state.autoDarkTimeoutId = null;
+  }
+
   if (state.running) {
     // บันทึกเวลาจริงที่เริ่ม
     state.startedAt = Date.now();
@@ -57,6 +62,16 @@ export function toggleTimer(force, toggleDarkMode) {
       }
       onTickRender();
     }, 500); // poll ทุก 500ms เพื่อให้แม่นขึ้น
+
+    // Auto dark mode — re-check ก่อน fire จริง
+    if (state.autoDarkMode && !state.darkMode) {
+      state.autoDarkTimeoutId = setTimeout(() => {
+        if (state.running && state.autoDarkMode && !state.darkMode) {
+          toggleDarkMode(true);
+        }
+        state.autoDarkTimeoutId = null;
+      }, 5000);
+    }
   }
   onTickRender();
 }
@@ -88,11 +103,11 @@ let onLongCompleteRef = null;
 let onPomodoroCompleteRef = null;
 let onMilestoneRef = null;
 export function setTimerRefs({ playAlarm, toggleDarkMode, onLongComplete, onPomodoroComplete, onMilestone }) {
-  playAlarmRef          = playAlarm;
-  toggleDarkModeRef     = toggleDarkMode;
-  onLongCompleteRef     = onLongComplete;
+  playAlarmRef = playAlarm;
+  toggleDarkModeRef = toggleDarkMode;
+  onLongCompleteRef = onLongComplete;
   onPomodoroCompleteRef = onPomodoroComplete;
-  onMilestoneRef        = onMilestone;
+  onMilestoneRef = onMilestone;
 }
 
 // Stops the timer then switches mode — used by mode tabs and skip buttons

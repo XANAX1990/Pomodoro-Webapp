@@ -1,5 +1,5 @@
 // service-worker.js
-const CACHE_NAME = "pomodoro-04-07-2025-3";
+const CACHE_NAME = "pomodoro-09-07-2026";
 
 const STATIC_FILES = [
   "/",
