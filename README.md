@@ -1,4 +1,4 @@
-# 🍅 Pomodoro Timer — PROJECTS_SSS
+# 🍅 Pomodoro Timer
 
 A fully static Pomodoro web app with ADHD-friendly mode, background music, task management, PWA support, and Firebase rating integration.
 
@@ -19,7 +19,7 @@ public/
 ├── package.json
 ├── package-lock.json
 ├── .gitignore
-├── README.md
+├── README.mdหห
 │
 ├── js/
 │   ├── main.js             # Entry point — wires all modules + event listeners
