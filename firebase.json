@@ -27,7 +27,7 @@
           },
           {
             "key": "Content-Security-Policy",
-            "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://cdnjs.cloudflare.com https://www.recaptcha.net https://recaptcha.net https://www.google.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; font-src 'self' https://cdnjs.cloudflare.com; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.cloudfunctions.net https://*.google-analytics.com https://*.analytics.google.com wss://*.firebaseio.com; img-src 'self' data: https://*.google-analytics.com; frame-src https://www.recaptcha.net https://recaptcha.net https://www.google.com;"
+            "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://cdnjs.cloudflare.com https://www.recaptcha.net https://recaptcha.net https://www.google.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; font-src 'self' https://cdnjs.cloudflare.com; connect-src 'self' https://www.gstatic.com https://www.google.com https://*.googleapis.com https://*.firebaseio.com https://*.cloudfunctions.net https://*.google-analytics.com https://*.analytics.google.com https://*.firebase.com wss://*.firebaseio.com; img-src 'self' data: https://*.google-analytics.com; frame-src https://www.recaptcha.net https://recaptcha.net https://www.google.com;"
           }
         ]
       },
