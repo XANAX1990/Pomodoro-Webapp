@@ -1417,6 +1417,29 @@ footer a {
     grid-template-columns: 1fr;
   }
 
+  /* Tasks panel stacks under timer on mobile — sidebar toggle no longer applies */
+  .workspace.tasks-collapsed {
+    grid-template-columns: 1fr;
+  }
+
+  .tasks-toggle-btn {
+    display: none;
+  }
+
+  .tasks-pane,
+  .tasks-pane.collapsed {
+    width: auto;
+  }
+
+  .tasks-inner,
+  .tasks-pane.collapsed .tasks-inner {
+    opacity: 1;
+    pointer-events: auto;
+    transform: none;
+    width: auto;
+    padding: 24px 20px;
+  }
+
   .tasks-pane {
     border-top: 1px solid #d7d7d7;
     border-left: 0;
@@ -2045,7 +2068,9 @@ html.dark-mode .fab-submit-btn button:hover {
 }
 
 @media (max-width: 600px) {
-  .fab {
+
+  .fab,
+  body.tasks-collapsed .fab {
     right: 16px;
     left: auto;
     bottom: 108px;
