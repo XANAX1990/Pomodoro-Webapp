@@ -1,37 +1,49 @@
 // service-worker.js
 const CACHE_NAME = "pomodoro-25-07-2026";
 
+// ใช้ path สัมพัทธ์กับ scope ของ service worker เอง (ไม่ hardcode "/")
+// เพื่อให้ deploy ใน subfolder (เช่น /pomodoro/) แล้วไม่ 404 ทำให้ install ทั้งชุดพัง
+const BASE = new URL("./", self.registration.scope).pathname;
 const STATIC_FILES = [
-  "/",
-  "/index.html",
-  "/adhd.html",
-  "/styles.css",
-  "/manifest.json",
-  "/firebase-config.js",
-  "/js/main.js",
-  "/js/config.js",
-  "/js/state.js",
-  "/js/timer.js",
-  "/js/render.js",
-  "/js/tasks.js",
-  "/js/audio.js",
-  "/js/darkmode.js",
-  "/js/ui.js",
-  "/js/utils.js",
-  "/js/rating.js",
-  "/js/movement.js",
-  "/js/reward.js",
-  "/js/milestone.js",
-  "/js/pwa.js",
-  "/icons/PWA512.png",
-  "/icons/PWA192.png",
-  "/icons/favicon.png"
+  BASE,
+  BASE + "index.html",
+  BASE + "adhd.html",
+  BASE + "styles.css",
+  BASE + "manifest.json",
+  BASE + "firebase-config.js",
+  BASE + "js/main.js",
+  BASE + "js/config.js",
+  BASE + "js/state.js",
+  BASE + "js/timer.js",
+  BASE + "js/render.js",
+  BASE + "js/tasks.js",
+  BASE + "js/audio.js",
+  BASE + "js/darkmode.js",
+  BASE + "js/ui.js",
+  BASE + "js/utils.js",
+  BASE + "js/rating.js",
+  BASE + "js/movement.js",
+  BASE + "js/reward.js",
+  BASE + "js/milestone.js",
+  BASE + "js/pwa.js",
+  BASE + "icons/PWA512.png",
+  BASE + "icons/PWA192.png",
+  BASE + "icons/favicon.png"
 ];
 
 // Install — cache static files
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_FILES))
+    caches.open(CACHE_NAME).then((cache) =>
+      Promise.all(
+        STATIC_FILES.map((url) =>
+          cache.add(url).catch((err) => {
+            // ไฟล์เดียวหาย (404/network) ไม่ควรทำให้ SW ทั้งตัวติดตั้งไม่ผ่าน
+            console.warn("SW: cache ไฟล์ไม่สำเร็จ", url, err);
+          })
+        )
+      )
+    )
   );
   self.skipWaiting();
 });

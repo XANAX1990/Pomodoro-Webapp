@@ -59,6 +59,10 @@ initReward();
 let pendingReward = false;
 setMovementRefs({
   onMovementDone: () => {
+    // เริ่มนับ break อัตโนมัติ "หลัง" ปิด popup แล้วเท่านั้น (กันนับทับตอน popup ยังเปิด)
+    if (state.autoBreaks && !state.running && (state.mode === "rest" || state.mode === "long")) {
+      toggleTimer(true, toggleDarkMode);
+    }
     if (pendingReward) {
       pendingReward = false;
       setTimeout(() => showRewardPopup(), 400);

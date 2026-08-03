@@ -6,8 +6,28 @@ export const presets = {
   custom: { label: "Custom", pomodoro: 15, rest: 8, long: 10 }
 };
 
-// load saved custom preset กลับมา
-const savedCustom = JSON.parse(localStorage.getItem("pomodoroCustomPreset") || "null");
+// load saved custom preset กลับมา (กัน localStorage เพี้ยน/เก่า/พังแล้วทำให้ทั้งแอปโหลดไม่ขึ้น)
+function loadSavedCustomPreset() {
+  try {
+    const raw = localStorage.getItem("pomodoroCustomPreset");
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") return null;
+    // sanitize ทีละ key กันค่าที่ไม่ใช่ตัวเลข/ค่าติดลบ/NaN หลุดเข้ามา
+    const clean = {};
+    ["pomodoro", "rest", "long"].forEach((key) => {
+      const val = Number(parsed[key]);
+      if (Number.isFinite(val) && val > 0) clean[key] = val;
+    });
+    return Object.keys(clean).length ? clean : null;
+  } catch (e) {
+    console.warn("pomodoroCustomPreset ใน localStorage เสีย ใช้ค่า default แทน:", e);
+    try { localStorage.removeItem("pomodoroCustomPreset"); } catch (_) {}
+    return null;
+  }
+}
+
+const savedCustom = loadSavedCustomPreset();
 if (savedCustom) Object.assign(presets.custom, savedCustom);
 
 export const tracks = [

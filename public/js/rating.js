@@ -92,7 +92,7 @@ function _resetSuccessAnim() {
 }
 
 async function _saveScore(scoreValue) {
-  if (!scoreValue || scoreValue <= 0) return;
+  if (!scoreValue || scoreValue <= 0) return false;
   try {
     await ensureAuth();
     const docRef = await addDoc(collection(db, "ratings"), {
@@ -100,8 +100,10 @@ async function _saveScore(scoreValue) {
       timestamp: new Date(),
     });
     console.log("บันทึกคะแนนลง Firebase เรียบร้อย! ID:", docRef.id);
+    return true;
   } catch (e) {
     console.error("เกิดข้อผิดพลาดในการบันทึก:", e);
+    return false;
   }
 }
 
@@ -115,12 +117,26 @@ function _bindModal() {
     els.rating_container?.classList.add("show");
   });
 
-  els.submitRatingBtn?.addEventListener("click", () => {
-    _saveScore(selectedRating);
+  els.submitRatingBtn?.addEventListener("click", async () => {
+    const ratingToSave = selectedRating;
+    if (els.submitRatingBtn) els.submitRatingBtn.disabled = true;
+    els.submitRatingBtn?.classList.add("is-saving"); // เผื่อมี CSS spinner/loading state
+
+    const saved = await _saveScore(ratingToSave);
+
+    els.submitRatingBtn?.classList.remove("is-saving");
+
+    if (!saved) {
+      // บันทึกไม่สำเร็จ — เปิดปุ่มกลับมาให้กดใหม่ ไม่โชว์ success
+      if (els.submitRatingBtn) els.submitRatingBtn.disabled = false;
+      alert("บันทึกคะแนนไม่สำเร็จ ลองใหม่อีกครั้งนะ");
+      return;
+    }
+
     setFabOpen(false);
+    els.rating_container?.classList.remove("show");
     selectedRating = 0;
     highlightStars(0);
-    if (els.submitRatingBtn) els.submitRatingBtn.disabled = true;
     _resetSuccessAnim();
     setTimeout(() => els.success_container?.classList.add("show"), 50);
   });

@@ -53,8 +53,8 @@ export function sendTimerNotification(mode) {
   try {
     new Notification(msg.title, {
       body: msg.body,
-      icon: "/icons/pwa-192.png",
-      badge: "/icons/pwa-192.png",
+      icon: "icons/PWA192.png",
+      badge: "icons/PWA192.png",
       tag: "pomodoro-timer",
       renotify: true,
     });
