@@ -186,6 +186,7 @@ export function updateCustomValue(name, value) {
   updateCustomSliders();
   if (state.preset === "custom") {
     state.remaining = durationFor();
+    saveSharedTimerState(); // ไม่งั้นสลับหน้าแล้ว remaining เก่ากลับมาแม้ label preset จะโชว์ค่าใหม่แล้วก็ตาม
     buildPresetList();
     onTickRender();
   }

@@ -18,7 +18,7 @@ import {
 import { initRender, render } from "./render.js";
 import { initRating, setFabOpen } from "./rating.js";
 import { initMovement, showMovementPopup, setMovementRefs, closeMovementPopup } from "./movement.js";
-import { initReward, showRewardPopup, setRewardRefs, closeRewardPopup } from "./reward.js";
+import { initReward, showRewardPopup, setRewardRefs, closeRewardPopup, closeRewardEditPopup } from "./reward.js";
 import { showMilestoneToast } from "./milestone.js";
 import { registerServiceWorker, requestNotificationPermission, sendTimerNotification } from "./pwa.js";
 
@@ -95,6 +95,8 @@ document.addEventListener("click", (event) => {
       closeRewardPopup();
     } else if (event.target.id === "movementPopup") {
       closeMovementPopup(true);
+    } else if (event.target.id === "rewardEditPopup") {
+      closeRewardEditPopup(); // ปิด backdrop ของ Edit Reward ต้องกลับไป Reward popup เหมือนกด Cancel
     } else {
       event.target.classList.remove("show");
     }

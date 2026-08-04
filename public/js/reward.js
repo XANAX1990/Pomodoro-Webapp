@@ -71,10 +71,7 @@ export function initReward() {
     ep.classList.add("show");
   });
 
-  document.getElementById("rewardEditCancelBtn")?.addEventListener("click", () => {
-    document.getElementById("rewardEditPopup")?.classList.remove("show");
-    backToRewardPopupIfStillOpen();
-  });
+  document.getElementById("rewardEditCancelBtn")?.addEventListener("click", closeRewardEditPopup);
 
   document.getElementById("rewardEditSaveBtn")?.addEventListener("click", () => {
     const text = document.getElementById("rewardInput").value.trim();
@@ -82,9 +79,15 @@ export function initReward() {
     if (text) rewardData.text = text;
     if (mins > 0) rewardData.mins = mins;
     localStorage.setItem("pomodoroReward", JSON.stringify(rewardData));
-    document.getElementById("rewardEditPopup")?.classList.remove("show");
-    backToRewardPopupIfStillOpen();
+    closeRewardEditPopup();
   });
+}
+
+// ปิดหน้า Edit Reward แล้วกลับไป Reward popup ถ้ายัง "เปิดอยู่จริง" — ใช้ร่วมกันทั้งปุ่ม Cancel/Save
+// และตอนคลิก backdrop ของ rewardEditPopup (เรียกจาก main.js) กันไม่ให้ reward popup ค้างหายไปเฉยๆ
+export function closeRewardEditPopup() {
+  document.getElementById("rewardEditPopup")?.classList.remove("show");
+  backToRewardPopupIfStillOpen();
 }
 
 // เรียกหลังปิด Edit popup (ทั้ง Save และ Cancel) — ถ้า reward ยัง "เปิดอยู่จริง" (ยังไม่หมดเวลา/ยังไม่กด skip)
