@@ -3,7 +3,7 @@ import { queryEls } from "./config.js";
 import { state } from "./state.js";
 import {
   initTimer, setTimerRefs, switchModeManually, toggleTimer, resetSession,
-  buildPresetList, updatePreset, updateCustomValue
+  buildPresetList, updatePreset, updateCustomValue, completeSession
 } from "./timer.js";
 import { initDarkMode, toggleDarkMode, updateDarkModeUI } from "./darkmode.js";
 import { initTasks, addTask, clearDoneTasks, clearAllTasks, renderTasks } from "./tasks.js";
@@ -17,8 +17,8 @@ import {
 } from "./ui.js";
 import { initRender, render } from "./render.js";
 import { initRating, setFabOpen } from "./rating.js";
-import { initMovement, showMovementPopup, setMovementRefs } from "./movement.js";
-import { initReward, showRewardPopup, setRewardRefs } from "./reward.js";
+import { initMovement, showMovementPopup, setMovementRefs, closeMovementPopup } from "./movement.js";
+import { initReward, showRewardPopup, setRewardRefs, closeRewardPopup } from "./reward.js";
 import { showMilestoneToast } from "./milestone.js";
 import { registerServiceWorker, requestNotificationPermission, sendTimerNotification } from "./pwa.js";
 
@@ -89,7 +89,15 @@ document.addEventListener("click", (event) => {
     els.taskFormActions.hidden = true;
   }
   if (event.target.classList.contains("modal-container")) {
-    event.target.classList.remove("show");
+    // popup บางตัวมี timer/callback ผูกอยู่เบื้องหลัง (Reward, Movement) ถ้าแค่ลบ class "show"
+    // เฉยๆ โดยไม่เรียกฟังก์ชันปิดจริง จะทำให้ interval เดินต่อแบบมองไม่เห็น และ auto-break ไม่ทำงาน
+    if (event.target.id === "rewardPopup") {
+      closeRewardPopup();
+    } else if (event.target.id === "movementPopup") {
+      closeMovementPopup(true);
+    } else {
+      event.target.classList.remove("show");
+    }
     if (event.target === els.rating_container) setFabOpen(false);
   }
 });
@@ -229,6 +237,11 @@ updateMusic();
 // ต้องสร้าง interval ใหม่จริงๆ ไม่งั้น UI จะโชว์ว่ากำลังวิ่งแต่เวลาไม่ลด
 if (state.running) {
   toggleTimer(true, toggleDarkMode);
+} else if (state.expiredWhileAway) {
+  // timer หมดเวลาไปแล้วระหว่างที่สลับหน้า/ปิดแท็บไป ต้อง complete session ย้อนหลังให้ครบ flow
+  // (นับรอบ, เล่นเสียง, เปิด Movement/Reward popup, เปลี่ยนโหมดถัดไป) ไม่ใช่แค่โชว์ 00:00 ค้างเฉยๆ
+  state.expiredWhileAway = false;
+  completeSession();
 }
 
 // PWA init

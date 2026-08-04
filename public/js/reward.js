@@ -57,10 +57,13 @@ export function closeRewardPopup(fireCallback = true) {
 }
 
 export function initReward() {
-  document.getElementById("rewardSkipBtn")?.addEventListener("click", closeRewardPopup);
+  document.getElementById("rewardSkipBtn")?.addEventListener("click", () => closeRewardPopup());
 
   document.getElementById("rewardEditBtn")?.addEventListener("click", () => {
-    closeRewardPopup(false); // ปิดไปแก้ไข reward ไม่ใช่ปิดเพราะจบ ไม่ต้อง auto-start break
+    // แค่ "ซ่อน" reward popup ไปแก้ไข ไม่ปิดจริง — timer เบื้องหลังยังเดินต่อ และ
+    // rewardOpen ยังเป็น true อยู่ ไม่งั้นพอกด Save/Cancel แล้ว flow จะขาดไปเลย
+    // (ก่อนหน้านี้ปิดด้วย closeRewardPopup(false) ทำให้ auto-start Long Break ไม่ทำงานตอน Save/Cancel)
+    document.getElementById("rewardPopup")?.classList.remove("show");
     const ep = document.getElementById("rewardEditPopup");
     if (!ep) return;
     document.getElementById("rewardInput").value = rewardData.text;
@@ -70,6 +73,7 @@ export function initReward() {
 
   document.getElementById("rewardEditCancelBtn")?.addEventListener("click", () => {
     document.getElementById("rewardEditPopup")?.classList.remove("show");
+    backToRewardPopupIfStillOpen();
   });
 
   document.getElementById("rewardEditSaveBtn")?.addEventListener("click", () => {
@@ -79,5 +83,15 @@ export function initReward() {
     if (mins > 0) rewardData.mins = mins;
     localStorage.setItem("pomodoroReward", JSON.stringify(rewardData));
     document.getElementById("rewardEditPopup")?.classList.remove("show");
+    backToRewardPopupIfStillOpen();
   });
+}
+
+// เรียกหลังปิด Edit popup (ทั้ง Save และ Cancel) — ถ้า reward ยัง "เปิดอยู่จริง" (ยังไม่หมดเวลา/ยังไม่กด skip)
+// ให้โชว์ popup กลับมา ตัว interval ไม่เคยถูกหยุดเลยตั้งแต่แรก จึงนับต่อได้ถูกต้อง ไม่รีเซ็ตเวลา
+function backToRewardPopupIfStillOpen() {
+  if (rewardOpen) {
+    document.getElementById("rewardDisplay").textContent = rewardData.text;
+    document.getElementById("rewardPopup")?.classList.add("show");
+  }
 }

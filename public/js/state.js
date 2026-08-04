@@ -44,11 +44,16 @@ if (shared?.running && shared?.startedAt) {
   if (restoredRemaining <= 0) restoredRunning = false; // หมดเวลาไปแล้วระหว่างสลับหน้า
 }
 
+// true เฉพาะตอนที่ timer "กำลังรันอยู่ตอนออกจากหน้าเดิม" แต่หมดเวลาไปแล้วระหว่างที่ห่างหายไป
+// (ไม่ใช่แค่ remaining=0 เฉยๆ ตอนเปิดแอปครั้งแรก) ใช้บอก main.js ให้เรียก complete session ย้อนหลัง
+// ไม่งั้นจะโชว์ 00:00 ค้างเฉยๆ ไม่นับรอบ ไม่เล่นเสียง ไม่เปลี่ยนโหมดให้
+
 export const state = {
   mode: shared?.mode || "pomodoro",
   preset: shared?.preset || "popular",
   remaining: restoredRemaining ?? presets.popular.pomodoro * 60,
   running: restoredRunning,
+  expiredWhileAway: !!(shared?.running && shared?.startedAt && !restoredRunning),
   timerId: null,
   startedAt: shared?.startedAt ?? null,
   remainingAtStart: shared?.remainingAtStart ?? 0,

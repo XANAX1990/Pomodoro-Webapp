@@ -42,6 +42,14 @@ export function toggleTimer(force, toggleDarkMode) {
     state.startedAt = Date.now();
     state.remainingAtStart = state.remaining;
 
+    // สลับหน้า index.html <-> adhd.html ทำให้ module นี้โหลดใหม่ firedMilestones (Set) จะกลายเป็นค่าว่าง
+    // ทั้งที่จริงมี milestone ที่ "ผ่านไปแล้ว" ตามเวลานาฬิกาจริง ต้องเติมให้ครบก่อน ไม่งั้นตอนสลับหน้ามาจะแจ้งซ้ำ
+    if (state.mode === "pomodoro") {
+      const totalElapsedNow = durationFor("pomodoro") - state.remainingAtStart;
+      const alreadyPassedMilestone = Math.floor(totalElapsedNow / 300) * 5;
+      for (let m = 5; m <= alreadyPassedMilestone; m += 5) firedMilestones.add(m);
+    }
+
     state.timerId = setInterval(() => {
       const elapsed = Math.floor((Date.now() - state.startedAt) / 1000);
       state.remaining = Math.max(0, state.remainingAtStart - elapsed);
@@ -78,7 +86,7 @@ export function toggleTimer(force, toggleDarkMode) {
   onTickRender();
 }
 
-function completeSession() {
+export function completeSession() {
   clearInterval(state.timerId);
   state.running = false;
   state.counts[state.mode] += 1;
@@ -155,6 +163,7 @@ export function updatePreset(key) {
     slider.disabled = !custom;
   });
   state.remaining = durationFor();
+  saveSharedTimerState(); // ถ้าไม่เซฟตรงนี้ สลับ index.html <-> adhd.html ตอน timer ยังไม่รัน จะเห็น preset เก่ากลับมา
   buildPresetList();
   onTickRender();
 }
