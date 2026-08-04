@@ -12,9 +12,16 @@ export function initTimer(elements, renderCallback) {
 
 export { durationFor };
 
+// เก็บ milestone (นาทีที่ 5, 10, 15, ...) ที่แจ้งไปแล้วของ "รอบ pomodoro ปัจจุบัน"
+// ต้องอยู่นอก toggleTimer เพื่อไม่ให้ Pause แล้ว Start ใหม่ทำให้แจ้งซ้ำ
+let firedMilestones = new Set();
+
 export function setMode(mode, reset = true) {
   state.mode = mode;
-  if (reset) state.remaining = durationFor(mode);
+  if (reset) {
+    state.remaining = durationFor(mode);
+    if (mode === "pomodoro") firedMilestones = new Set(); // เริ่มรอบ pomodoro ใหม่ ล้าง milestone เก่า
+  }
   els.modeTabs.forEach((tab) => tab.classList.toggle("active", tab.dataset.mode === mode));
   saveSharedTimerState();
   onTickRender();
@@ -34,9 +41,6 @@ export function toggleTimer(force, toggleDarkMode) {
     // บันทึกเวลาจริงที่เริ่ม
     state.startedAt = Date.now();
     state.remainingAtStart = state.remaining;
-
-    // เก็บ milestone (นาทีที่ 5, 10, 15, ...) ที่แจ้งไปแล้ว กันยิงซ้ำตอน poll ทับกัน
-    const firedMilestones = new Set();
 
     state.timerId = setInterval(() => {
       const elapsed = Math.floor((Date.now() - state.startedAt) / 1000);

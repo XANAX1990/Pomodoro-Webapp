@@ -18,7 +18,7 @@ import {
 import { initRender, render } from "./render.js";
 import { initRating, setFabOpen } from "./rating.js";
 import { initMovement, showMovementPopup, setMovementRefs } from "./movement.js";
-import { initReward, showRewardPopup } from "./reward.js";
+import { initReward, showRewardPopup, setRewardRefs } from "./reward.js";
 import { showMilestoneToast } from "./milestone.js";
 import { registerServiceWorker, requestNotificationPermission, sendTimerNotification } from "./pwa.js";
 
@@ -55,17 +55,25 @@ initRating(els);
 initMovement();
 initReward();
 
-// Movement → Reward chain
+// Movement → Reward → Break chain
+// รอบปกติ: Movement ปิด -> auto-start break ได้เลย
+// รอบที่มี reward (ครบ 4 pomodoro): Movement ปิด -> เปิด Reward -> "รอ Reward ปิดก่อน" ค่อย auto-start
+// long break กันไม่ให้ break timer วิ่งซ้อนกับ reward popup ที่ยังเปิดอยู่
 let pendingReward = false;
 setMovementRefs({
   onMovementDone: () => {
-    // เริ่มนับ break อัตโนมัติ "หลัง" ปิด popup แล้วเท่านั้น (กันนับทับตอน popup ยังเปิด)
-    if (state.autoBreaks && !state.running && (state.mode === "rest" || state.mode === "long")) {
-      toggleTimer(true, toggleDarkMode);
-    }
     if (pendingReward) {
       pendingReward = false;
       setTimeout(() => showRewardPopup(), 400);
+    } else if (state.autoBreaks && !state.running && (state.mode === "rest" || state.mode === "long")) {
+      toggleTimer(true, toggleDarkMode);
+    }
+  },
+});
+setRewardRefs({
+  onRewardDone: () => {
+    if (state.autoBreaks && !state.running && (state.mode === "rest" || state.mode === "long")) {
+      toggleTimer(true, toggleDarkMode);
     }
   },
 });
@@ -111,7 +119,13 @@ els.customRest.addEventListener("input", (e) => updateCustomValue("rest", e.targ
 els.customLong.addEventListener("input", (e) => updateCustomValue("long", e.target.value));
 
 /* ---------- Timer controls ---------- */
-els.startBtn.addEventListener("click", () => toggleTimer(undefined, toggleDarkMode));
+els.startBtn.addEventListener("click", () => {
+  // ขอ permission ตอนกด Start (มี user gesture) แทนตอนโหลดหน้า
+  // เบราว์เซอร์มักบล็อค prompt ที่ไม่ได้มาจากการกระทำของผู้ใช้อยู่แล้ว
+  // ฟังก์ชันเช็ค Notification.permission ให้เองอยู่แล้ว เลยเรียกซ้ำได้ไม่มีปัญหา
+  requestNotificationPermission();
+  toggleTimer(undefined, toggleDarkMode);
+});
 els.pauseBtn?.addEventListener("click", () => toggleTimer(false, toggleDarkMode));
 els.finishBtn?.addEventListener("click", () => {
   toggleTimer(false, toggleDarkMode);
@@ -211,9 +225,14 @@ render();
 renderTasks();
 updateMusic();
 
+// ถ้า timer กำลังรันอยู่ตอนโหลดหน้า (ค้างมาจาก sessionStorage ตอนสลับ index.html <-> adhd.html)
+// ต้องสร้าง interval ใหม่จริงๆ ไม่งั้น UI จะโชว์ว่ากำลังวิ่งแต่เวลาไม่ลด
+if (state.running) {
+  toggleTimer(true, toggleDarkMode);
+}
+
 // PWA init
 registerServiceWorker();
-requestNotificationPermission();
 /* ---------- Tasks panel toggle ---------- */
 const tasksToggleBtn = document.getElementById("tasksToggleBtn");
 const tasksPane = document.getElementById("tasksPane");

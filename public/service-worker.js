@@ -1,5 +1,5 @@
 // service-worker.js
-const CACHE_NAME = "pomodoro-03-08-2026";
+const CACHE_NAME = "pomodoro-04-08-2026";
 
 // ใช้ path สัมพัทธ์กับ scope ของ service worker เอง (ไม่ hardcode "/")
 // เพื่อให้ deploy ใน subfolder (เช่น /pomodoro/) แล้วไม่ 404 ทำให้ install ทั้งชุดพัง
@@ -28,7 +28,15 @@ const STATIC_FILES = [
   BASE + "js/pwa.js",
   BASE + "icons/PWA512.png",
   BASE + "icons/PWA192.png",
-  BASE + "icons/favicon.png"
+  BASE + "icons/favicon.png",
+  // Firebase SDK (static JS ไฟล์จาก CDN) — ต้องแคชไว้ด้วย เพราะ main.js import
+  // ไฟล์พวกนี้แบบ top-level ถ้าโหลดไม่ได้ตอน offline โมดูลทั้งชุดจะพังไปด้วย
+  // (ต่างจาก Firestore/Analytics ที่เป็น live API เรียกจริงตอน runtime เท่านั้น)
+  "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js",
+  "https://www.gstatic.com/firebasejs/12.14.0/firebase-analytics.js",
+  "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js",
+  "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js",
+  "https://www.gstatic.com/firebasejs/12.14.0/firebase-app-check.js"
 ];
 
 // Install — cache static files
@@ -67,12 +75,20 @@ self.addEventListener("message", (event) => {
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
 
-  // Firebase / CDN — always network
+  // Firebase SDK ไฟล์ static จาก gstatic (firebase-app.js, firebase-auth.js, ...)
+  // แคช cache-first ได้เหมือนไฟล์ static อื่น เพราะ pin เวอร์ชันไว้ตายตัวแล้ว (12.14.0)
+  // ต่างจาก live API call ด้านล่างที่ต้อง network เสมอ
+  const isFirebaseSdkFile = url.hostname === "www.gstatic.com" && url.pathname.startsWith("/firebasejs/");
+
+  // Firebase live API / analytics collect / recaptcha / cdnjs — ต้อง network เสมอ ห้าม cache
   if (
-    url.hostname.includes("firebase") ||
-    url.hostname.includes("gstatic") ||
-    url.hostname.includes("googleapis") ||
-    url.hostname.includes("cdnjs")
+    !isFirebaseSdkFile &&
+    (
+      url.hostname.includes("firebase") ||
+      url.hostname.includes("gstatic") ||
+      url.hostname.includes("googleapis") ||
+      url.hostname.includes("cdnjs")
+    )
   ) {
     return;
   }
