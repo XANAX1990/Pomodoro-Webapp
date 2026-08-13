@@ -81,6 +81,74 @@ setRewardRefs({
   },
 });
 
+/* ---------- Audio bar (mobile collapse) ----------
+   เดิม body padding-bottom เป็นค่าคงที่ (92px) แต่พอ audio bar ล้นเป็น 2 แถวบนจอแคบ
+   ความสูงจริงมากกว่านั้น ทำให้ไปทับพื้นที่ timer/tasks ด้านล่าง — วัดความสูงจริงด้วย
+   ResizeObserver แล้ว sync เข้า body padding เสมอ ไม่ว่าจะพับ/กางออก */
+if (els.audioBar) {
+  const syncAudioBarSpacing = () => {
+    document.body.style.paddingBottom = `${els.audioBar.offsetHeight + 12}px`;
+  };
+  new ResizeObserver(syncAudioBarSpacing).observe(els.audioBar);
+  syncAudioBarSpacing();
+
+  els.audioCollapseBtn?.addEventListener("click", () => {
+    const collapsed = els.audioBar.classList.toggle("collapsed");
+    els.audioCollapseBtn.setAttribute("aria-expanded", String(!collapsed));
+  });
+}
+
+/* ---------- Modal focus trap (accessibility) ----------
+   เดิม modal ไม่ trap focus — เวลาเปิด modal คนที่ใช้คีย์บอร์ด/สกรีนรีดเดอร์
+   ยังกด Tab ไปโดนปุ่มลอย (FAB, audio-bar, theme toggle ฯลฯ) ที่ "มองไม่เห็น" อยู่หลัง
+   overlay ได้ ทำให้งง/ใช้งานไม่ได้ ต้องดักปุ่ม Tab ให้วนอยู่แต่ใน modal ที่เปิดอยู่ */
+const FOCUSABLE_SELECTOR =
+  'a[href], button:not([disabled]), textarea, input:not([disabled]), select, [tabindex]:not([tabindex="-1"])';
+
+let lastFocusedBeforeModal = null;
+
+function getOpenModal() {
+  return document.querySelector(".modal-container.show");
+}
+
+function trapModalFocus(event) {
+  const modal = getOpenModal();
+  if (!modal || event.key !== "Tab") return;
+  const focusable = [...modal.querySelectorAll(FOCUSABLE_SELECTOR)].filter(
+    (el) => el.offsetParent !== null
+  );
+  if (focusable.length === 0) return;
+  const first = focusable[0];
+  const last = focusable[focusable.length - 1];
+  if (event.shiftKey && document.activeElement === first) {
+    event.preventDefault();
+    last.focus();
+  } else if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault();
+    first.focus();
+  } else if (!modal.contains(document.activeElement)) {
+    event.preventDefault();
+    first.focus();
+  }
+}
+document.addEventListener("keydown", trapModalFocus);
+
+// เฝ้าดู class "show" ของทุก modal-container — พอเปิด ให้ย้าย focus เข้าไปข้างในทันที
+// พอปิด ให้คืน focus กลับไปที่ปุ่มเดิมที่เปิด modal (กันโฟกัสหลุดไปที่ <body>)
+document.querySelectorAll(".modal-container").forEach((modal) => {
+  const observer = new MutationObserver(() => {
+    if (modal.classList.contains("show")) {
+      lastFocusedBeforeModal = document.activeElement;
+      const focusable = modal.querySelector(FOCUSABLE_SELECTOR);
+      focusable?.focus();
+    } else if (lastFocusedBeforeModal && !getOpenModal()) {
+      lastFocusedBeforeModal.focus();
+      lastFocusedBeforeModal = null;
+    }
+  });
+  observer.observe(modal, { attributes: true, attributeFilter: ["class"] });
+});
+
 /* ---------- Global click-outside ---------- */
 document.addEventListener("click", (event) => {
   if (!event.target.closest(".dropdown, .top-actions, .task-menu, .more-btn")) {
@@ -132,11 +200,34 @@ els.customRest.addEventListener("input", (e) => updateCustomValue("rest", e.targ
 els.customLong.addEventListener("input", (e) => updateCustomValue("long", e.target.value));
 
 /* ---------- Timer controls ---------- */
+function maybeAskNotificationPermission() {
+  if (!("Notification" in window)) return;
+  if (Notification.permission !== "default") return; // ตัดสินใจไปแล้ว (granted/denied) ไม่ต้องถามซ้ำ
+  let alreadyAsked = false;
+  try {
+    alreadyAsked = localStorage.getItem("pomodoroNotifAsked") === "1";
+  } catch {
+    alreadyAsked = false;
+  }
+  if (alreadyAsked) return;
+  try {
+    localStorage.setItem("pomodoroNotifAsked", "1");
+  } catch {
+    /* ignore เขียน localStorage ไม่ได้ */
+  }
+  const wantsNotif = window.confirm(
+    "อยากให้แจ้งเตือนตอน Pomodoro/พักจบไหม? ถ้ากดตกลง เบราว์เซอร์จะขอสิทธิ์แจ้งเตือนอีกครั้ง (ถ้ากด Block ตรงนั้น จะเปิดใหม่ทีหลังต้องไปตั้งค่าเบราว์เซอร์เอง)"
+  );
+  if (wantsNotif) requestNotificationPermission();
+}
+
 els.startBtn.addEventListener("click", () => {
-  // ขอ permission ตอนกด Start (มี user gesture) แทนตอนโหลดหน้า
-  // เบราว์เซอร์มักบล็อค prompt ที่ไม่ได้มาจากการกระทำของผู้ใช้อยู่แล้ว
-  // ฟังก์ชันเช็ค Notification.permission ให้เองอยู่แล้ว เลยเรียกซ้ำได้ไม่มีปัญหา
-  requestNotificationPermission();
+  // เดิมยิง native permission prompt ทันทีตอนกด Start โดยไม่มีคำอธิบายเลย
+  // คนส่วนมากเจอ prompt แปลกๆ แบบนี้มักกด "Block" เป็นปฏิกิริยาอัตโนมัติ และเบราว์เซอร์
+  // ส่วนใหญ่จะไม่ถามซ้ำให้อีกเลยหลังจากนั้น (ต้องไปเปิดเองใน browser settings) เสียโอกาสถามตอนที่เหมาะสมกว่า
+  // เปลี่ยนเป็น: อธิบายก่อนด้วย confirm ของแอปเอง แล้วค่อยยิง native prompt เฉพาะตอนผู้ใช้ตกลง
+  // และถามแค่ครั้งเดียวต่อเครื่อง ไม่ถามซ้ำทุกครั้งที่กด Start
+  maybeAskNotificationPermission();
   toggleTimer(undefined, toggleDarkMode);
 });
 els.pauseBtn?.addEventListener("click", () => toggleTimer(false, toggleDarkMode));
@@ -163,8 +254,7 @@ els.autoDarkMode?.addEventListener("change", () => {
 });
 
 /* ---------- Tasks ---------- */
-els.taskForm.addEventListener("submit", (event) => {
-  event.preventDefault();
+function submitTaskInput() {
   const title = els.taskInput.value.trim();
   if (!title) {
     if (els.taskFormActions) els.taskFormActions.hidden = true;
@@ -173,6 +263,19 @@ els.taskForm.addEventListener("submit", (event) => {
   addTask(title);
   els.taskInput.value = "";
   if (els.taskFormActions) els.taskFormActions.hidden = true;
+}
+els.taskForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  submitTaskInput();
+});
+// เดิมพึ่ง implicit form submission ล้วนๆ ซึ่งบางเบราว์เซอร์/คีย์บอร์ดมือถือ
+// (โดยเฉพาะตอนที่มีปุ่ม submit มากกว่า 1 ตัวในฟอร์ม — ปุ่ม "+" กับปุ่ม "Add") ไม่ยิง submit
+// ให้ตอนกด Enter ดักจับ Enter บน input ตรงๆ เพื่อบันทึกงานได้ทันทีเสมอ
+els.taskInput.addEventListener("keydown", (event) => {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    submitTaskInput();
+  }
 });
 els.taskInput.addEventListener("focus", () => {
   if (els.taskFormActions) els.taskFormActions.hidden = false;

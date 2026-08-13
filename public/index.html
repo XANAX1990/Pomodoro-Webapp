@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 
 <head>
   <link rel="icon" href="data:,">
@@ -297,7 +297,12 @@
     </div>
     
     <!--Audio Bar -->
-    <div class="audio-bar">
+    <div class="audio-bar" id="audioBar">
+      <button class="icon-only audio-collapse-btn" id="audioCollapseBtn" aria-label="Collapse audio bar" aria-expanded="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+          <polyline points="6,15 12,9 18,15" />
+        </svg>
+      </button>
       <button class="icon-only" id="playlistBtn" aria-label="Playlist">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
           <line x1="3" y1="6" x2="21" y2="6" />
@@ -349,11 +354,11 @@
     <!-- Modal 1: Confirm finish -->
     <div class="modal-container" id="modal_container">
       <div class="modal">
-        <h1>Finish session?</h1>
-        <p>You want to finish session and take survey?</p>
+        <h1>จบเซสชันเลยไหม?</h1>
+        <p>ต้องการจบเซสชันนี้และให้คะแนนความพึงพอใจหรือไม่?</p>
         <div class="btnwrapper">
-          <button id="yesBtn">Yes</button>
-          <button id="noBtn">No</button>
+          <button id="yesBtn">ใช่</button>
+          <button id="noBtn">ไม่</button>
         </div>
       </div>
     </div>
@@ -361,8 +366,8 @@
     <!-- Modal 2: Star rating -->
     <div class="modal-container" id="rating_container">
       <div class="modal">
-        <h1>Rate your session</h1>
-        <p>How was your experience today?</p>
+        <h1>ให้คะแนนเซสชันนี้</h1>
+        <p>วันนี้ใช้งานเป็นอย่างไรบ้าง?</p>
         <div class="star-rating" id="starRating">
           <button class="star" data-value="1">★</button>
           <button class="star" data-value="2">★</button>
@@ -370,7 +375,7 @@
           <button class="star" data-value="4">★</button>
           <button class="star" data-value="5">★</button>
         </div>
-        <button id="submitRatingBtn" disabled>Submit</button>
+        <button id="submitRatingBtn" disabled>ส่งคะแนน</button>
       </div>
     </div>
 
@@ -383,8 +388,8 @@
             <polyline class="check-mark" points="24,41 35,52 56,30" />
           </svg>
         </div>
-        <div class="success-title">Thank you for rating us!</div>
-        <button id="okBtn">OK</button>
+        <div class="success-title">ขอบคุณสำหรับการให้คะแนน!</div>
+        <button id="okBtn">ตกลง</button>
       </div>
     </div>
 

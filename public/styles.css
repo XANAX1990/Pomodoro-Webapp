@@ -809,6 +809,10 @@ html.dark-mode .task-item.just-completed {
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.3s ease-in-out;
+  /* เดิม z-index: (ไม่ได้กำหนด/ต่ำกว่า) .audio-bar(90) / .fab(100) / toast(9999)
+     ทำให้ปุ่มลอยเหล่านั้นยังกดได้และรับ focus จาก Tab/สกรีนรีดเดอร์ได้ทั้งที่โมดัลเปิดอยู่
+     ยกให้สูงกว่าทุก overlay ในหน้า */
+  z-index: 10000;
 }
 
 .modal-container.show {
@@ -1240,6 +1244,10 @@ footer a {
   white-space: nowrap;
 }
 
+.audio-collapse-btn {
+  display: none; /* โชว์เฉพาะจอมือถือ (ดู media query max-width:620px) */
+}
+
 .fullscreen-btn {
   margin-left: auto;
 }
@@ -1547,6 +1555,26 @@ footer a {
   .audio-bar {
     flex-wrap: wrap;
     gap: 8px;
+  }
+
+  /* พับ audio bar ได้บนมือถือ — เดิม flex-wrap ทำให้บาร์ล้นเป็น 2 แถวแล้วทับ
+     พื้นที่ timer/tasks เพราะ body padding-bottom เป็นค่าคงที่ ไม่พอสำหรับความสูงจริง */
+  .audio-collapse-btn {
+    display: inline-flex;
+    order: -1;
+  }
+
+  .audio-bar.collapsed {
+    flex-wrap: nowrap;
+    overflow: hidden;
+  }
+
+  .audio-bar.collapsed > *:not(.audio-collapse-btn):not(.play-control) {
+    display: none;
+  }
+
+  .audio-bar.collapsed .audio-collapse-btn svg {
+    transform: rotate(180deg);
   }
 
   #volumeSlider {

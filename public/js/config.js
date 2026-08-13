@@ -92,6 +92,8 @@ export function queryEls() {
     volumeSlider: document.getElementById("volumeSlider"),
     trackName: document.getElementById("trackName"),
     playlistBtn: document.getElementById("playlistBtn"),
+    audioBar: document.getElementById("audioBar"),
+    audioCollapseBtn: document.getElementById("audioCollapseBtn"),
     playlistMenu: document.getElementById("playlistMenu"),
     playlistFolders: document.getElementById("playlistFolders"),
 
