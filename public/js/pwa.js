@@ -1,10 +1,16 @@
 // pwa.js — PWA registration + Web Notification helper
 
+// เก็บ registration ไว้ใช้ยิง notification ผ่าน SW เอง (ต่างจาก new Notification()
+// ที่ผูกกับ page เท่านั้น — พอปิดหน้า/มือถือ minimize app มักไม่ยิง ส่วน
+// reg.showNotification() วิ่งผ่าน service worker ทำให้ขึ้นแม้แอปไม่ได้เปิดอยู่)
+let swRegistration = null;
+
 /* ── Service Worker ── */
 export async function registerServiceWorker() {
   if (!("serviceWorker" in navigator)) return;
   try {
     const reg = await navigator.serviceWorker.register("service-worker.js");
+    swRegistration = reg;
     console.log("Service Worker registered:", reg.scope);
 
     // พบ SW เวอร์ชันใหม่ → สั่งเข้าควบคุมทันที
@@ -50,14 +56,24 @@ export function sendTimerNotification(mode) {
   };
 
   const msg = messages[mode] || messages.pomodoro;
+  const options = {
+    body: msg.body,
+    icon: "icons/PWA192.png",
+    badge: "icons/PWA192.png",
+    tag: "pomodoro-timer",
+    renotify: true,
+  };
+
   try {
-    new Notification(msg.title, {
-      body: msg.body,
-      icon: "icons/PWA192.png",
-      badge: "icons/PWA192.png",
-      tag: "pomodoro-timer",
-      renotify: true,
-    });
+    // ยิงผ่าน service worker registration ก่อนเสมอ (รองรับ PWA ตอนแอปไม่ได้เปิดอยู่/มือถือ)
+    if (swRegistration) {
+      swRegistration.showNotification(msg.title, options).catch((e) => {
+        console.warn("showNotification failed:", e);
+      });
+      return;
+    }
+    // fallback กรณี SW ยังไม่ได้ register (เช่น browser ไม่รองรับ SW)
+    new Notification(msg.title, options);
   } catch (e) {
     console.warn("Notification failed:", e);
   }

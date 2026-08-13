@@ -98,7 +98,26 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Static files — cache-first
+  // HTML/JS/CSS — network-first (เดี๋ยวๆ ตรวจของใหม่เสมอ)
+  // ป้องกันปัญหา user ค้างโค้ดเก่าถ้าลืม bump CACHE_NAME ตอน release
+  // (ก่อนหน้านี้ cache-first ทั้งหมด ทำให้ถ้าลืมเปลี่ยนชื่อ cache ผู้ใช้เดิมจะไม่เห็นโค้ด/สไตล์ใหม่เลย)
+  const isCodeFile = /\.(html|js|css)$/.test(url.pathname) || url.pathname.endsWith("/");
+  if (isCodeFile) {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          if (response && response.status === 200 && event.request.url.startsWith("http")) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          }
+          return response;
+        })
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
+  // ไฟล์ static อื่น (ไอคอน, manifest ฯลฯ) — cache-first ตามเดิม
   event.respondWith(
     caches.match(event.request).then((cached) => {
       if (cached) return cached;

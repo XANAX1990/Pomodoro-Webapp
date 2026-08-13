@@ -102,6 +102,10 @@ export function completeSession() {
   } else {
     if (state.mode === "long") {
       onLongCompleteRef?.();
+    } else if (state.mode === "rest") {
+      // เดิมไม่มีการเรียก callback ตอน Short Break จบเลย ทั้งที่ pwa.js มีข้อความ
+      // แจ้งเตือน "rest" เตรียมไว้แล้ว — เพิ่มให้ครบสมมาตรกับ pomodoro/long
+      onRestCompleteRef?.();
     }
     setMode("pomodoro");
     if (state.autoPomodoro) toggleTimer(true, toggleDarkModeRef);
@@ -112,12 +116,14 @@ export function completeSession() {
 let playAlarmRef = null;
 let toggleDarkModeRef = null;
 let onLongCompleteRef = null;
+let onRestCompleteRef = null;
 let onPomodoroCompleteRef = null;
 let onMilestoneRef = null;
-export function setTimerRefs({ playAlarm, toggleDarkMode, onLongComplete, onPomodoroComplete, onMilestone }) {
+export function setTimerRefs({ playAlarm, toggleDarkMode, onLongComplete, onRestComplete, onPomodoroComplete, onMilestone }) {
   playAlarmRef = playAlarm;
   toggleDarkModeRef = toggleDarkMode;
   onLongCompleteRef = onLongComplete;
+  onRestCompleteRef = onRestComplete;
   onPomodoroCompleteRef = onPomodoroComplete;
   onMilestoneRef = onMilestone;
 }

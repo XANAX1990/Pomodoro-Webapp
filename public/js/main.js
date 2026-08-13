@@ -36,6 +36,9 @@ setTimerRefs({
     els.rating_container?.classList.add("show");
     setFabOpen(true);
   },
+  onRestComplete: () => {
+    sendTimerNotification("rest");
+  },
   onPomodoroComplete: (count) => {
     sendTimerNotification("pomodoro");
     showMovementPopup();

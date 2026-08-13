@@ -11,6 +11,7 @@ rewardData = rewardData || { text: "ดู YouTube 15 นาที", mins: 15 };
 
 let rewardTimerId = null;
 let rewardOpen = false; // กันไม่ให้ onRewardDone ยิงตอนที่ยังไม่เคยเปิด popup จริง (เช่นตอนกดปุ่มแก้ไข reward)
+let rewardSecsLeft = 0; // เก็บเวลาที่เหลือไว้นอก closure เพื่อ pause/resume ได้ตอนเปิดหน้า Edit
 
 // Injected callback — เรียกเมื่อ reward popup ปิด "เพราะหมดเวลา/กด skip" เท่านั้น
 // (ไม่เรียกตอนปิดเพื่อไปเปิดหน้าแก้ไข reward)
@@ -31,14 +32,34 @@ export function showRewardPopup() {
 }
 
 function startRewardTimer(totalSecs) {
-  let left = totalSecs;
-  updateRewardCountdown(left);
+  rewardSecsLeft = totalSecs;
+  updateRewardCountdown(rewardSecsLeft);
   clearInterval(rewardTimerId);
-  rewardTimerId = setInterval(() => {
-    left--;
-    updateRewardCountdown(left);
-    if (left <= 0) closeRewardPopup();
-  }, 1000);
+  rewardTimerId = setInterval(tickRewardTimer, 1000);
+}
+
+function tickRewardTimer() {
+  rewardSecsLeft--;
+  updateRewardCountdown(rewardSecsLeft);
+  if (rewardSecsLeft <= 0) closeRewardPopup();
+}
+
+// หยุดนับถอยหลังชั่วคราว (ตอนเปิดหน้า Edit) — ไม่งั้นเวลาหมดพอดีตอนกำลังแก้ไข
+// จะยิง closeRewardPopup() ที่ไปเรียก onRewardDone (auto-start Long Break) ซ้อนอยู่
+// เบื้องหลังโดยที่ผู้ใช้ไม่รู้ตัว เพราะ popup ถูกซ่อนไปแล้วตั้งแต่กด Edit
+function pauseRewardTimer() {
+  clearInterval(rewardTimerId);
+  rewardTimerId = null;
+}
+
+// เดินนับต่อจากเวลาที่เหลือเดิม (ไม่รีเซ็ต) หลังปิดหน้า Edit
+function resumeRewardTimer() {
+  if (!rewardOpen || rewardTimerId !== null) return;
+  if (rewardSecsLeft <= 0) {
+    closeRewardPopup();
+    return;
+  }
+  rewardTimerId = setInterval(tickRewardTimer, 1000);
 }
 
 function updateRewardCountdown(secs) {
@@ -64,6 +85,7 @@ export function initReward() {
     // rewardOpen ยังเป็น true อยู่ ไม่งั้นพอกด Save/Cancel แล้ว flow จะขาดไปเลย
     // (ก่อนหน้านี้ปิดด้วย closeRewardPopup(false) ทำให้ auto-start Long Break ไม่ทำงานตอน Save/Cancel)
     document.getElementById("rewardPopup")?.classList.remove("show");
+    pauseRewardTimer();
     const ep = document.getElementById("rewardEditPopup");
     if (!ep) return;
     document.getElementById("rewardInput").value = rewardData.text;
@@ -88,6 +110,7 @@ export function initReward() {
 export function closeRewardEditPopup() {
   document.getElementById("rewardEditPopup")?.classList.remove("show");
   backToRewardPopupIfStillOpen();
+  resumeRewardTimer();
 }
 
 // เรียกหลังปิด Edit popup (ทั้ง Save และ Cancel) — ถ้า reward ยัง "เปิดอยู่จริง" (ยังไม่หมดเวลา/ยังไม่กด skip)
