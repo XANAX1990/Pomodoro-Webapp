@@ -19,7 +19,7 @@ public/
 ├── package.json
 ├── package-lock.json
 ├── .gitignore
-├── README.mdหห
+├── README.md
 │
 ├── js/
 │   ├── main.js             # Entry point — wires all modules + event listeners
@@ -62,17 +62,18 @@ public/
 - **Task list** — Add, complete, delete tasks; persisted in localStorage
 - **Background music** — Lofi / Ambient / Jazz; volume control, prev/next, mute
 - **Alarm sounds** — 5 options with volume control
-- **Star Rating (FAB)** — Rate your session anytime; saves to Firebase Firestore
-- **Micro-reward toast** — Encouraging message every 5 minutes during Pomodoro
+- **Star Rating (FAB)** — Auto-prompts after Long Break ends or when Finish Session is pressed; FAB (bottom-left) also opens it anytime; saves to Firebase Firestore
+- **Micro-reward toast** — Random encouraging message (10 variants) every 5 minutes during Pomodoro; auto-dismisses after 3.5s or can be closed manually
 - **Web Notifications** — Notifies when timer ends even if tab is not active
 - **Dark mode** — Full dark/light theme
 - **Fullscreen + Mobile** — Responsive with hamburger menu
 
 ### หน้า ADHD (`adhd.html`)
 รองรับทุกฟีเจอร์จากหน้าบุคคลทั่วไป และเพิ่มเติม:
+- **Mini-Pomodoro** — โหมดจับเวลาสั้นลง 10–15 นาที (แทนมาตรฐาน 25 นาที) ลดแรงกดดันในการเริ่มงาน (Task Initiation) สำหรับผู้มีภาวะ Time Blindness
 - **Hourglass Timer** — Visual sand timer แทนตัวเลข
 - **Split Buttons** — ปุ่ม Pause / Finish แยกกัน
-- **Pomodoro Movement** — Popup แนะนำท่าขยับร่างกาย (7 ท่า) พร้อม ring countdown
+- **Pomodoro Movement** — Popup แนะนำท่าขยับร่างกาย (สุ่มจาก 7 ท่า เช่น Deep Breathing, ยืดแขน, หมุนคอ, พักสายตา) พร้อม ring countdown; กด Done หรือ Skip ได้
 - **Reward Pomodoro** — ครบ 4 รอบ → ขึ้นรางวัลที่ตั้งไว้ พร้อม countdown timer
 - **Finish → Rate** — กด Finish → Yes/No modal → ให้ดาว → Success animation
 
@@ -177,6 +178,7 @@ main.js
 | Package | Version | Usage |
 |---------|---------|-------|
 | firebase | ^12.14.0 | Firestore + Analytics (CDN via gstatic) |
+| Firebase Analytics | (bundled w/ firebase) | Usage tracking |
 | Font Awesome | 5.15.3 | Star icons (CDN) |
 
 > No bundler (Webpack/Vite) — native ES modules directly in browser.
