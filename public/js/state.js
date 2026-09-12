@@ -58,6 +58,7 @@ export const state = {
   startedAt: shared?.startedAt ?? null,
   remainingAtStart: shared?.remainingAtStart ?? 0,
   counts: shared?.counts || { pomodoro: 0, rest: 0, long: 0 },
+  nextMilestoneAt: shared?.nextMilestoneAt ?? null,
   tasks: loadTasks(),
 
   autoPomodoro: localStorage.getItem("pomodoroAutoPomodoro") === "true",
@@ -69,10 +70,12 @@ export const state = {
 
   alarmVolume: Number(localStorage.getItem("pomodoroAlarmVolume") || "20"),
 
-  selectedTrack: 0,
-  musicPlaying: false,
-  muted: false,
-  audio: null,
+  // selectedTrack/musicPlaying/muted/volume ต้อง persist ผ่าน sessionStorage เหมือน timer
+  // ไม่งั้นสลับหน้า index.html <-> adhd.html แล้วเพลงที่กำลังฟังอยู่จะรีเซ็ตกลับเป็นค่า default ทุกครั้ง
+  selectedTrack: shared?.selectedTrack ?? 0,
+  musicPlaying: shared?.musicPlaying ?? false,
+  muted: shared?.muted ?? false,
+  volume: shared?.volume ?? 70,
   playlistExpandedFolders: {}
 };
 
@@ -92,6 +95,11 @@ export function saveSharedTimerState() {
       startedAt: state.startedAt,
       remainingAtStart: state.remainingAtStart,
       counts: state.counts,
+      nextMilestoneAt: state.nextMilestoneAt,
+      selectedTrack: state.selectedTrack,
+      musicPlaying: state.musicPlaying,
+      muted: state.muted,
+      volume: state.volume,
     }));
   } catch (e) {
     // sessionStorage เต็ม/ถูกบล็อก — ไม่ใช่เรื่องคอขาดบาดตาย ข้ามไป

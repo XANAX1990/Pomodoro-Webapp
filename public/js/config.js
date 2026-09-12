@@ -1,6 +1,6 @@
 export const presets = {
   baby: { label: "Beginner", pomodoro: 10, rest: 5, long: 10 },
-  popular: { label: "Standard", pomodoro: 20, rest: 5, long: 15 },
+  popular: { label: "Standard", pomodoro: 25, rest: 5, long: 15 },
   medium: { label: "Medium", pomodoro: 40, rest: 8, long: 20 },
   extended: { label: "Expert", pomodoro: 60, rest: 10, long: 25 },
   custom: { label: "Custom", pomodoro: 15, rest: 8, long: 10 }

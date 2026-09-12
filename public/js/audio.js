@@ -1,5 +1,5 @@
 import { tracks } from "./config.js";
-import { state } from "./state.js";
+import { state, saveSharedTimerState } from "./state.js";
 import { getFolderName } from "./utils.js";
 
 let els;
@@ -48,54 +48,23 @@ export function playAlarm() {
   const alarm = document.querySelector('input[name="alarm"]:checked')?.value;
   if (!alarm || alarm === "None") return;
 
+  // ทั้ง 5 ตัวเลือก alarm มีไฟล์เสียงครบใน ALARM_FILES อยู่แล้ว จึงไม่มีทางเข้าเงื่อนไข
+  // "ไม่มีไฟล์" ได้จริง — เดิมมี fallback synthesized beep (+ getAudioContext ที่เปิด
+  // oscillator เงียบค้างไว้ตลอดอายุหน้า) ไว้เผื่อ แต่เป็น dead code เพราะไม่มีทางถูกเรียก
   const file = ALARM_FILES[alarm];
-  if (file) {
-    playAlarmFile(file);
-    return;
-  }
-
-  // Fallback: synthesized beep for any alarm option without an audio file
-  stopCurrentAlarm();
-  const context = getAudioContext();
-  if (!context) return;
-  const oscillator = context.createOscillator();
-  const gain = context.createGain();
-  oscillator.frequency.value = alarm === "Soft chime" ? 660 : alarm === "School bell" ? 920 : 780;
-  gain.gain.value = 0.08 * (state.alarmVolume / 100);
-  oscillator.connect(gain).connect(context.destination);
-  oscillator.start();
-  oscillator.stop(context.currentTime + 0.25);
-}
-
-function getAudioContext() {
-  const AudioContext = window.AudioContext || window.webkitAudioContext;
-  if (!AudioContext) return null;
-  if (!state.audio) {
-    // สร้างเฉพาะเมื่อจำเป็น (user gesture required anyway)
-    state.audio = { context: null, gain: null, oscillator: null };
-  }
-  if (!state.audio.context) {
-    const context = new AudioContext();
-    const gain = context.createGain();
-    const oscillator = context.createOscillator();
-    oscillator.type = "sine";
-    oscillator.frequency.value = 196;
-    gain.gain.value = 0;
-    oscillator.connect(gain).connect(context.destination);
-    oscillator.start();
-    state.audio = { context, gain, oscillator };
-  }
-  return state.audio.context;
+  if (file) playAlarmFile(file);
 }
 
 export function updateMusic() {
   const track = tracks[state.selectedTrack];
-  const volume = state.muted ? 0 : Number(els.volumeSlider.value) / 100;
+  // เก็บ volume ลง state ทุกครั้งที่ slider ขยับ เพื่อ persist ผ่าน sessionStorage
+  // ตอนสลับหน้า index.html <-> adhd.html (เดิม volume อ่านจาก DOM slider ตรงๆ ไม่เคยเก็บที่ไหน)
+  state.volume = Number(els.volumeSlider.value);
+  const volume = state.muted ? 0 : state.volume / 100;
 
-  if (!track.file) return;
-
-  if (state.audio && state.audio.gain) {
-    state.audio.gain.gain.value = 0;
+  if (!track.file) {
+    saveSharedTimerState();
+    return;
   }
 
   if (currentBgmFile !== track.file) {
@@ -118,6 +87,8 @@ export function updateMusic() {
   const pauseIcon = els.musicPlayBtn.querySelector(".pause-icon");
   if (playIcon) playIcon.style.display = state.musicPlaying ? "none" : "block";
   if (pauseIcon) pauseIcon.style.display = state.musicPlaying ? "block" : "none";
+
+  saveSharedTimerState();
 }
 
 // Moves selectedTrack by `delta` (+1/-1), wrapping within the current track's folder only.

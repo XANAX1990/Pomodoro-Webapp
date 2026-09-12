@@ -12,17 +12,24 @@ export function initTimer(elements, renderCallback) {
 
 export { durationFor };
 
-// เก็บ milestone (นาทีที่ 5, 10, 15, ...) ที่แจ้งไปแล้วของ "รอบ pomodoro ปัจจุบัน"
-// ต้องอยู่นอก toggleTimer เพื่อไม่ให้ Pause แล้ว Start ใหม่ทำให้แจ้งซ้ำ
-let firedMilestones = new Set();
+// Skinner's intermittent (variable-interval) reinforcement — สุ่มช่วงเวลาก่อน toast ครั้งถัดไป
+// ระหว่าง 3-7 นาที (เฉลี่ย ~5 นาที) แทนที่จะ fix ทุก 5 นาทีเป๊ะ ตามที่เอกสารข้อ 2.7 อ้างถึง
+function randomMilestoneGap() {
+  return 180 + Math.random() * 240; // 180-420 วินาที
+}
 
 export function setMode(mode, reset = true) {
   state.mode = mode;
   if (reset) {
     state.remaining = durationFor(mode);
-    if (mode === "pomodoro") firedMilestones = new Set(); // เริ่มรอบ pomodoro ใหม่ ล้าง milestone เก่า
+    // เริ่มรอบ pomodoro ใหม่ — สุ่มช่วงเวลา milestone ใหม่ (เก็บใน state จึงรอดตอนสลับหน้าได้เอง)
+    if (mode === "pomodoro") state.nextMilestoneAt = randomMilestoneGap();
   }
-  els.modeTabs.forEach((tab) => tab.classList.toggle("active", tab.dataset.mode === mode));
+  els.modeTabs.forEach((tab) => {
+    const isActive = tab.dataset.mode === mode;
+    tab.classList.toggle("active", isActive);
+    tab.setAttribute("aria-selected", String(isActive));
+  });
   saveSharedTimerState();
   onTickRender();
 }
@@ -42,25 +49,23 @@ export function toggleTimer(force, toggleDarkMode) {
     state.startedAt = Date.now();
     state.remainingAtStart = state.remaining;
 
-    // สลับหน้า index.html <-> adhd.html ทำให้ module นี้โหลดใหม่ firedMilestones (Set) จะกลายเป็นค่าว่าง
-    // ทั้งที่จริงมี milestone ที่ "ผ่านไปแล้ว" ตามเวลานาฬิกาจริง ต้องเติมให้ครบก่อน ไม่งั้นตอนสลับหน้ามาจะแจ้งซ้ำ
-    if (state.mode === "pomodoro") {
-      const totalElapsedNow = durationFor("pomodoro") - state.remainingAtStart;
-      const alreadyPassedMilestone = Math.floor(totalElapsedNow / 300) * 5;
-      for (let m = 5; m <= alreadyPassedMilestone; m += 5) firedMilestones.add(m);
+    // state.nextMilestoneAt เก็บใน sessionStorage อยู่แล้ว (saveSharedTimerState) จึงรอดตอนสลับ
+    // หน้า index.html <-> adhd.html เอง — เผื่อกรณี fresh state ที่ยังไม่เคยสุ่มไว้เท่านั้น
+    if (state.mode === "pomodoro" && state.nextMilestoneAt == null) {
+      state.nextMilestoneAt = randomMilestoneGap();
     }
 
     state.timerId = setInterval(() => {
       const elapsed = Math.floor((Date.now() - state.startedAt) / 1000);
       state.remaining = Math.max(0, state.remainingAtStart - elapsed);
 
-      // Milestone: ทุก 5 นาที ระหว่าง Pomodoro ที่กำลังวิ่งอยู่
-      if (state.mode === "pomodoro") {
+      // Milestone: สุ่มช่วงเวลา (intermittent) ระหว่าง Pomodoro ที่กำลังวิ่งอยู่
+      if (state.mode === "pomodoro" && state.nextMilestoneAt != null) {
         const totalElapsed = durationFor("pomodoro") - state.remainingAtStart + elapsed;
-        const milestoneMinute = Math.floor(totalElapsed / 300) * 5;
-        if (milestoneMinute > 0 && !firedMilestones.has(milestoneMinute)) {
-          firedMilestones.add(milestoneMinute);
-          onMilestoneRef?.(milestoneMinute);
+        if (totalElapsed >= state.nextMilestoneAt) {
+          const minuteMark = Math.round(totalElapsed / 60);
+          onMilestoneRef?.(minuteMark);
+          state.nextMilestoneAt = totalElapsed + randomMilestoneGap();
         }
       }
 
@@ -95,14 +100,21 @@ export function completeSession() {
 
   if (state.mode === "pomodoro") {
     const nextMode = state.counts.pomodoro % 4 === 0 ? "long" : "rest";
-    onPomodoroCompleteRef?.(state.counts.pomodoro);
+    // setMode ต้องมาก่อน onPomodoroCompleteRef — หน้า General ไม่มี movementPopup เลยเรียก
+    // onMovementDone แบบ synchronous ทันที ถ้า state.mode ยังเป็น "pomodoro" อยู่ตอนนั้น
+    // เงื่อนไข mode === "rest" || "long" ใน main.js จะ false ทำให้ auto-start break ไม่ทำงานเลย
     setMode(nextMode);
+    onPomodoroCompleteRef?.(state.counts.pomodoro);
     // หมายเหตุ: ไม่ auto-start break ตรงนี้ เพราะต้องรอ Movement popup ปิดก่อน
     // (ดู onMovementDone ใน main.js) ไม่งั้น break จะเริ่มนับตอน popup ยังเปิดอยู่
+  } else if (state.mode === "long") {
+    setMode("pomodoro");
+    onLongCompleteRef?.();
+    // ไม่ auto-start ตรงนี้ต่อให้ autoPomodoro เปิดอยู่ — onLongCompleteRef เปิด rating popup
+    // ให้คะแนน ต้องรอปิด popup นั้นก่อน (ดู onRatingFlowDone ใน main.js) ไม่งั้น pomodoro
+    // รอบใหม่จะเริ่มนับเงียบๆ อยู่หลัง modal ที่ผู้ใช้ยังไม่ทันได้ตอบ
   } else {
-    if (state.mode === "long") {
-      onLongCompleteRef?.();
-    } else if (state.mode === "rest") {
+    if (state.mode === "rest") {
       // เดิมไม่มีการเรียก callback ตอน Short Break จบเลย ทั้งที่ pwa.js มีข้อความ
       // แจ้งเตือน "rest" เตรียมไว้แล้ว — เพิ่มให้ครบสมมาตรกับ pomodoro/long
       onRestCompleteRef?.();
@@ -132,17 +144,6 @@ export function setTimerRefs({ playAlarm, toggleDarkMode, onLongComplete, onRest
 export function switchModeManually(mode) {
   toggleTimer(false, toggleDarkModeRef);
   setMode(mode);
-}
-
-export function resetSession() {
-  clearInterval(state.timerId);
-  state.running = false;
-  if (state.autoDarkTimeoutId) {
-    clearTimeout(state.autoDarkTimeoutId);
-    state.autoDarkTimeoutId = null;
-  }
-  state.counts = { pomodoro: 0, rest: 0, long: 0 };
-  setMode("pomodoro"); // setMode จะเรียก saveSharedTimerState() ให้อยู่แล้ว
 }
 
 export function buildPresetList() {

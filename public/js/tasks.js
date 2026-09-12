@@ -22,7 +22,6 @@ function createTaskElement(task) {
   `;
   item.querySelector("input").addEventListener("change", () => {
     task.done = !task.done;
-    if (task.done) task.justCompleted = true;
     saveTasks();
     renderTasks();
   });

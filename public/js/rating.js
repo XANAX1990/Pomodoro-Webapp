@@ -1,7 +1,11 @@
 // rating.js — Star Rating + FAB logic
-import { db, auth } from "../firebase-config.js";
-import { collection, addDoc } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
-import { signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
+//
+// หมายเหตุ: ห้าม import firebase-config.js แบบ static ที่หัวไฟล์นี้ — ตัวมันเรียก
+// initializeAppCheck() + ReCaptchaEnterpriseProvider ซึ่งเป็น network call ที่ล้มได้
+// (wifi บล็อก gstatic, App Check/reCAPTCHA fail เช่นในห้องสอบ) ถ้า import แบบ static
+// ทั้ง module graph ที่ main.js โหลดอยู่ (รวม timer.js) จะพังไปด้วย ทำให้นาฬิกา/เสียงเตือน
+// ใช้ไม่ได้ทั้งหน้า ทั้งที่ไม่เกี่ยวกับ Firebase เลย — จึงโหลดแบบ dynamic import
+// เฉพาะตอนผู้ใช้กดส่งคะแนนจริงๆ เท่านั้น
 
 let els;
 let selectedRating = 0;
@@ -9,18 +13,51 @@ let selectedRating = 0;
 let _authReady = null;
 function ensureAuth() {
   if (!_authReady) {
-    _authReady = new Promise((resolve) => {
-      onAuthStateChanged(auth, (user) => {
-        if (user) return resolve(user);
-        signInAnonymously(auth).then(resolve).catch(resolve);
+    _authReady = (async () => {
+      const { auth } = await import("../firebase-config.js");
+      const { signInAnonymously, onAuthStateChanged } =
+        await import("https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js");
+      return new Promise((resolve, reject) => {
+        // กันค้างรอตลอดไปถ้า App Check/reCAPTCHA เน็ตช้าหรือล้มเหลวเงียบๆ
+        const timer = setTimeout(() => {
+          unsub();
+          reject(new Error("Firebase Auth timeout"));
+        }, 8000);
+
+        const unsub = onAuthStateChanged(auth, (user) => {
+          if (user) {
+            clearTimeout(timer); unsub();
+            console.log("Firebase Auth พร้อม uid:", user.uid);
+            return resolve(user);
+          }
+          signInAnonymously(auth)
+            .then((cred) => {
+              clearTimeout(timer); unsub();
+              console.log("Firebase Auth พร้อม uid:", cred.user.uid);
+              resolve(cred.user);
+            })
+            .catch((err) => { clearTimeout(timer); unsub(); reject(err); });
+        });
       });
-    });
+    })();
   }
   return _authReady;
 }
 
 // FAB elements
 let fabBtn, fabIconStar, fabIconClose;
+
+// true เฉพาะตอน rating_container ถูกเปิดเพราะ Long Break จบ (ไม่ใช่ผู้ใช้กด FAB เข้ามาเล่นๆ)
+// ใช้บอก main.js ว่าเมื่อไหร่ "ปิดกล่องให้คะแนนแล้วจริงๆ" จะได้ auto-start pomodoro รอบถัดไปได้
+// (ถ้าไม่กันไว้ เปิด autoPomodoro แล้ว timer รอบใหม่จะเริ่มนับเงียบๆ อยู่หลัง modal ที่ยังเปิดค้าง)
+let awaitingLongBreakDecision = false;
+let onRatingFlowDoneRef = null;
+export function setRatingRefs({ onRatingFlowDone }) {
+  onRatingFlowDoneRef = onRatingFlowDone;
+}
+export function markLongBreakRatingPending() {
+  awaitingLongBreakDecision = true;
+}
 
 export function initRating(elements) {
   els = elements;
@@ -32,6 +69,15 @@ export function initRating(elements) {
   _bindStars();
   _bindModal();
   _bindFab();
+
+  // warm-up: เช็คว่า App Check + Anonymous Auth ใช้งานได้จริงตั้งแต่เปิดหน้า
+  // ไม่ await — ถ้าพังก็แค่ log ไม่กระทบ timer
+  // หมายเหตุ: เรียก signInAnonymously ทันทีให้ผู้เข้าชมทุกคน (ไม่ใช่แค่คนที่กดให้คะแนนจริง)
+  // ทำให้จำนวน user ใน Firebase Auth บวมกว่าจำนวนคนให้คะแนนจริง — ถ้าไม่ต้องการ ให้ตัด
+  // signInAnonymously ออกจาก warm-up นี้ (เช็คแค่ว่า App Check ออก token ผ่านไหมพอ)
+  const warm = () => ensureAuth().catch((e) => console.warn("Auth warm-up ล้มเหลว:", e));
+  if ("requestIdleCallback" in window) requestIdleCallback(warm);
+  else setTimeout(warm, 2000);
 }
 
 /* ── FAB ── */
@@ -47,6 +93,10 @@ export function setFabOpen(open) {
     if (fabIconStar) fabIconStar.style.display = "";
     if (fabIconClose) fabIconClose.style.display = "none";
     fabBtn.classList.remove("fab-open");
+    if (awaitingLongBreakDecision) {
+      awaitingLongBreakDecision = false;
+      onRatingFlowDoneRef?.();
+    }
   }
 }
 
@@ -95,8 +145,12 @@ async function _saveScore(scoreValue) {
   if (!scoreValue || scoreValue <= 0) return false;
   try {
     await ensureAuth();
+    const { db } = await import("../firebase-config.js");
+    const { collection, addDoc } =
+      await import("https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js");
     const docRef = await addDoc(collection(db, "ratings"), {
       rating: scoreValue,
+      mode: document.body.classList.contains("page-adhd") ? "adhd" : "general",
       timestamp: new Date(),
     });
     console.log("บันทึกคะแนนลง Firebase เรียบร้อย! ID:", docRef.id);

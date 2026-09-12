@@ -1,8 +1,7 @@
-import { app } from "../firebase-config.js";
 import { queryEls } from "./config.js";
 import { state } from "./state.js";
 import {
-  initTimer, setTimerRefs, switchModeManually, toggleTimer, resetSession,
+  initTimer, setTimerRefs, switchModeManually, toggleTimer,
   buildPresetList, updatePreset, updateCustomValue, completeSession
 } from "./timer.js";
 import { initDarkMode, toggleDarkMode, updateDarkModeUI } from "./darkmode.js";
@@ -16,13 +15,11 @@ import {
   toggleFullscreen, toggleMobileMenu
 } from "./ui.js";
 import { initRender, render } from "./render.js";
-import { initRating, setFabOpen } from "./rating.js";
+import { initRating, setFabOpen, setRatingRefs, markLongBreakRatingPending } from "./rating.js";
 import { initMovement, showMovementPopup, setMovementRefs, closeMovementPopup } from "./movement.js";
 import { initReward, showRewardPopup, setRewardRefs, closeRewardPopup, closeRewardEditPopup } from "./reward.js";
 import { showMilestoneToast } from "./milestone.js";
 import { registerServiceWorker, requestNotificationPermission, sendTimerNotification } from "./pwa.js";
-
-console.log("เชื่อมต่อสำเร็จโดยใช้ข้อมูลจาก firebase-config.js");
 
 const els = queryEls();
 
@@ -35,17 +32,23 @@ setTimerRefs({
     sendTimerNotification("long");
     els.rating_container?.classList.add("show");
     setFabOpen(true);
+    markLongBreakRatingPending();
   },
   onRestComplete: () => {
     sendTimerNotification("rest");
   },
   onPomodoroComplete: (count) => {
     sendTimerNotification("pomodoro");
-    showMovementPopup();
+    // ต้องตั้ง pendingReward ก่อนเรียก showMovementPopup() — หน้า General ไม่มี movementPopup
+    // เลยเรียก onMovementDone แบบ synchronous ทันทีในบรรทัดถัดไป ถ้าตั้ง pendingReward
+    // หลังจากนั้น onMovementDone จะอ่านค่าเก่า (false) ไปแล้ว ทำให้ reward รอบที่ 4 ไม่ขึ้นเลย
     if (count % 4 === 0) pendingReward = true;
+    showMovementPopup();
   },
   onMilestone: (minutesElapsed) => {
-    showMilestoneToast(minutesElapsed);
+    // Micro-reward toast เป็นฟีเจอร์เฉพาะ ADHD (ข้อ 1.3.4) — gate ด้วย page-adhd
+    // ไม่งั้นหน้า General ก็จะเห็น toast ทุก milestone ไปด้วยทั้งที่ไม่ควรมี
+    if (document.body.classList.contains("page-adhd")) showMilestoneToast(minutesElapsed);
   },
 });
 initDarkMode(els, render);
@@ -80,6 +83,20 @@ setRewardRefs({
     }
   },
 });
+setRatingRefs({
+  // เรียกเมื่อ rating popup ที่เปิดจาก Long Break จบ ถูกปิดแล้วจริงๆ (ข้าม/ให้คะแนนเสร็จ)
+  // ค่อย auto-start pomodoro รอบถัดไป — ดู completeSession() ใน timer.js ที่ตั้งใจไม่ auto-start ทันที
+  onRatingFlowDone: () => {
+    if (state.autoPomodoro && !state.running && state.mode === "pomodoro") {
+      toggleTimer(true, toggleDarkMode);
+    }
+  },
+});
+
+// Dev test panel — เรียก popup/toast ตรงๆ เพื่อทดสอบ ไม่ผ่าน flow ของ timer จริง
+document.getElementById("testMovementBtn")?.addEventListener("click", () => showMovementPopup());
+document.getElementById("testRewardBtn")?.addEventListener("click", () => showRewardPopup());
+document.getElementById("testMilestoneBtn")?.addEventListener("click", () => showMilestoneToast(5));
 
 /* ---------- Audio bar (mobile collapse) ----------
    เดิม body padding-bottom เป็นค่าคงที่ (92px) แต่พอ audio bar ล้นเป็น 2 แถวบนจอแคบ
@@ -235,7 +252,6 @@ els.finishBtn?.addEventListener("click", () => {
   toggleTimer(false, toggleDarkMode);
   els.modal_container?.classList.add("show");
 });
-if (els.restartBtn) els.restartBtn.addEventListener("click", resetSession);
 els.modeTabs.forEach((tab) => tab.addEventListener("click", () => switchModeManually(tab.dataset.mode)));
 els.skipBreakBtn.addEventListener("click", () => switchModeManually("rest"));
 els.skipLongBreakBtn.addEventListener("click", () => switchModeManually("long"));
@@ -339,6 +355,10 @@ if (els.autoBreaks) els.autoBreaks.checked = state.autoBreaks;
 buildPresetList();
 render();
 renderTasks();
+
+// Restore เพลง/volume/mute ที่ค้างไว้จาก sessionStorage ก่อนสลับหน้า index.html <-> adhd.html
+if (els.volumeSlider) els.volumeSlider.value = state.volume;
+if (state.muted) els.muteBtn.style.opacity = "0.35";
 updateMusic();
 
 // ถ้า timer กำลังรันอยู่ตอนโหลดหน้า (ค้างมาจาก sessionStorage ตอนสลับ index.html <-> adhd.html)

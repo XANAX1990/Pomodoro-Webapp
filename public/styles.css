@@ -890,6 +890,32 @@ html.dark-mode .task-item.just-completed {
   box-shadow: none;
 }
 
+/* Loading state ตอนกำลังบันทึกคะแนนขึ้น Firebase — เดิม rating.js ใส่ class นี้ไว้
+   แต่ไม่มี style รองรับ เลยไม่มีอะไรเปลี่ยนแปลงให้เห็นระหว่างรอ */
+#submitRatingBtn.is-saving {
+  color: transparent;
+  pointer-events: none;
+  position: relative;
+}
+
+#submitRatingBtn.is-saving::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 16px;
+  height: 16px;
+  margin: -8px 0 0 -8px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: submit-rating-spin 0.7s linear infinite;
+}
+
+@keyframes submit-rating-spin {
+  to { transform: rotate(360deg); }
+}
+
 /* ── Success modal ── */
 /* 3. แก้: ลบ properties ที่ซ้ำกับ .modal ออก */
 #success_container .modal {
@@ -1875,6 +1901,43 @@ body.tasks-collapsed .fab {
   background: #1f56c8;
   transform: scale(1.08);
   box-shadow: 0 6px 22px rgba(47, 104, 223, 0.55);
+}
+
+/* Dev test panel — ปุ่มทดสอบ Movement/Reward/Milestone toast (ไม่ผูกกับ flow จริง) */
+.dev-test-panel {
+  position: fixed;
+  top: 90px;
+  left: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  z-index: 500;
+}
+
+.dev-test-panel button {
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  background: #fff;
+  color: #222;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  white-space: nowrap;
+}
+
+.dev-test-panel button:hover {
+  background: #f2f2f2;
+}
+
+html.dark-mode .dev-test-panel button {
+  background: #2a2a2a;
+  color: #eee;
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+html.dark-mode .dev-test-panel button:hover {
+  background: #3a3a3a;
 }
 
 .fab.fab-open {

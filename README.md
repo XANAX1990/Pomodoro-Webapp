@@ -115,15 +115,25 @@ service cloud.firestore {
   match /databases/{database}/documents {
     match /ratings/{docId} {
       allow create: if request.auth != null 
-                        && request.resource.data.keys().hasOnly(["rating", "timestamp"]) &&
+                        && request.resource.data.keys().hasOnly(["rating", "mode", "timestamp"]) &&
                       request.resource.data.rating is int &&
                       request.resource.data.rating >= 1 &&
-                      request.resource.data.rating <= 5;
+                      request.resource.data.rating <= 5 &&
+                      request.resource.data.mode in ["general", "adhd"];
       allow read, update, delete: if false;
     }
   }
 }
 ```
+
+> **หมายเหตุ:** `js/rating.js` เขียน field `mode` (`"general"` / `"adhd"`) เพิ่มจากเดิมที่มีแค่ `rating`/`timestamp`
+> ต้องอัปเดต rules ด้านบนนี้ในหน้า Firebase Console ให้ตรงกันก่อน ไม่งั้น `hasOnly([...])` เดิมจะ reject
+> การเขียนทุกครั้งทันที — เอกสาร 42 records เดิม (ก่อนมี field นี้) ไม่ได้รับผลกระทบ เพราะ Firestore เป็น
+> schemaless แต่ query ที่ filter ด้วย `mode` ในอนาคตจะไม่เจอ record เก่าเหล่านั้น
+>
+> **`firestore.rules` / `firebase.json` / `.firebaserc` ไม่ได้อยู่ในโปรเจกต์นี้** — rules ด้านบนถูก
+> ตั้งค่าโดยตรงในหน้า Firebase Console (ไม่ได้ deploy ผ่าน Firebase CLI) ตารางไฟล์ด้านบนกับ block
+> นี้คือแหล่งอ้างอิงเดียวที่มีสำหรับ Security Rules ในโปรเจกต์นี้
 
 ---
 

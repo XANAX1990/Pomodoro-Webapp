@@ -8,6 +8,11 @@ let swRegistration = null;
 /* ── Service Worker ── */
 export async function registerServiceWorker() {
   if (!("serviceWorker" in navigator)) return;
+  // มี SW คุมหน้านี้อยู่ก่อนแล้วหรือยัง ณ ตอนที่เริ่ม register — ใช้แยกว่านี่คือการ "อัปเดต"
+  // SW เวอร์ชันเก่าเป็นใหม่ (ควร reload) หรือเป็นการ "ติดตั้งครั้งแรก" (ไม่ควร reload)
+  // เพราะ activate handler ของ SW เรียก self.clients.claim() ทำให้แม้แต่ครั้งแรกก็ยิง
+  // controllerchange เหมือนกัน ถ้าไม่กันไว้จะ reload หน้าเดโม่ทันทีโดยไม่จำเป็น
+  const hadController = !!navigator.serviceWorker.controller;
   try {
     const reg = await navigator.serviceWorker.register("service-worker.js");
     swRegistration = reg;
@@ -28,7 +33,7 @@ export async function registerServiceWorker() {
     // เมื่อ SW ใหม่เข้าควบคุมแล้ว → reload เพื่อโหลดโค้ดใหม่
     let refreshing = false;
     navigator.serviceWorker.addEventListener("controllerchange", () => {
-      if (refreshing) return;
+      if (refreshing || !hadController) return; // ครั้งแรกที่ติดตั้ง ไม่ต้อง reload
       refreshing = true;
       window.location.reload();
     });
