@@ -22,7 +22,12 @@ export function setRewardRefs({ onRewardDone }) {
 
 export function showRewardPopup() {
   const popup = document.getElementById("rewardPopup");
-  if (!popup) return;
+  if (!popup) {
+    // หน้า General ไม่มี rewardPopup — ถือว่าเสร็จทันที เหมือน movement.js
+    // ไม่งั้นรอบที่ 4 (pendingReward) จะค้าง ไม่เรียก onRewardDone เลย ทำให้ Long Break ไม่ auto-start
+    onRewardDoneRef?.();
+    return;
+  }
 
   document.getElementById("rewardDisplay").textContent = rewardData.text;
   document.getElementById("rewardRoundCount").textContent = state.counts.pomodoro;
