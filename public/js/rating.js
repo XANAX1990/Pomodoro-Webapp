@@ -18,28 +18,37 @@ function ensureAuth() {
       const { signInAnonymously, onAuthStateChanged } =
         await import("https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js");
       return new Promise((resolve, reject) => {
+        // unsub ประกาศเป็น let + เช็ค optional-chain เผื่อ onAuthStateChanged throw
+        // แบบ synchronous ก่อน assign เสร็จ — กัน ReferenceError ซ้อนตอน timeout ยิง
+        let unsub = null;
+
         // กันค้างรอตลอดไปถ้า App Check/reCAPTCHA เน็ตช้าหรือล้มเหลวเงียบๆ
         const timer = setTimeout(() => {
-          unsub();
+          unsub?.();
           reject(new Error("Firebase Auth timeout"));
         }, 8000);
 
-        const unsub = onAuthStateChanged(auth, (user) => {
+        unsub = onAuthStateChanged(auth, (user) => {
           if (user) {
-            clearTimeout(timer); unsub();
+            clearTimeout(timer); unsub?.();
             console.log("Firebase Auth พร้อม uid:", user.uid);
             return resolve(user);
           }
           signInAnonymously(auth)
             .then((cred) => {
-              clearTimeout(timer); unsub();
+              clearTimeout(timer); unsub?.();
               console.log("Firebase Auth พร้อม uid:", cred.user.uid);
               resolve(cred.user);
             })
-            .catch((err) => { clearTimeout(timer); unsub(); reject(err); });
+            .catch((err) => { clearTimeout(timer); unsub?.(); reject(err); });
         });
       });
     })();
+
+    // ถ้ารอบนี้ล้มเหลว (timeout/App Check/reCAPTCHA พัง) ต้องเคลียร์ cache ทิ้ง
+    // ไม่งั้นทุกครั้งถัดไปจะ reuse promise ที่ reject ไปแล้วทันที ไม่ได้ลอง signIn ใหม่เลย
+    // จนกว่าจะ refresh หน้า — ผู้ใช้กดส่งซ้ำกี่ครั้งก็เจอ error เดิมค้างตลอด
+    _authReady.catch(() => { _authReady = null; });
   }
   return _authReady;
 }
@@ -143,20 +152,30 @@ function _resetSuccessAnim() {
 
 async function _saveScore(scoreValue) {
   if (!scoreValue || scoreValue <= 0) return false;
+
+  // แยก try/catch ของ ensureAuth() กับ addDoc() ออกจากกัน — เดิมรวมก้อนเดียวทำให้ error จาก
+  // App Check/reCAPTCHA (แก้สิทธิ์เข้าไม่ได้เลย) กับ error จาก Firestore Security Rules
+  // (เข้าได้แต่เขียนไม่ผ่าน) ขึ้น log เดียวกันหมด แยกไว้จะรู้ทันทีว่าปัญหาอยู่ฝั่งไหนตอนสอบ
   try {
     await ensureAuth();
+  } catch (e) {
+    console.error("Auth ไม่พร้อม (App Check/reCAPTCHA มีปัญหา):", e);
+    return false;
+  }
+
+  try {
     const { db } = await import("../firebase-config.js");
-    const { collection, addDoc } =
+    const { collection, addDoc, serverTimestamp } =
       await import("https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js");
     const docRef = await addDoc(collection(db, "ratings"), {
       rating: scoreValue,
       mode: document.body.classList.contains("page-adhd") ? "adhd" : "general",
-      timestamp: new Date(),
+      timestamp: serverTimestamp(),
     });
     console.log("บันทึกคะแนนลง Firebase เรียบร้อย! ID:", docRef.id);
     return true;
   } catch (e) {
-    console.error("เกิดข้อผิดพลาดในการบันทึก:", e);
+    console.error("บันทึกคะแนนไม่สำเร็จ (Firestore/Security Rules):", e);
     return false;
   }
 }
