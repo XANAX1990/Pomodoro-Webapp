@@ -415,8 +415,10 @@
 
   </div> <!-- /app-shell -->
 
-  <!-- ====== Dev Test Panel (ทดสอบ Movement / Reward / Milestone Toast) ====== -->
-  <div class="dev-test-panel">
+  <!-- ====== Dev Test Panel (ทดสอบ Movement / Reward / Milestone Toast) ======
+       ซ่อนด้วย hidden ก่อนวันสอบ/deploy จริง — เปิดใช้ตอน dev โดยลบ hidden ออก
+       หรือรันใน console: document.querySelector('.dev-test-panel').hidden = false -->
+  <div class="dev-test-panel" hidden>
     <button id="testMovementBtn" type="button">🧘 Test Movement</button>
     <button id="testRewardBtn" type="button">🎉 Test Reward</button>
     <button id="testMilestoneBtn" type="button">🔥 Test Toast</button>

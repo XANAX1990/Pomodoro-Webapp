@@ -34,7 +34,7 @@ public/
 │   ├── rating.js           # Star rating, FAB, modal flow, Firestore save
 │   ├── movement.js         # Pomodoro Movement popup (ADHD)
 │   ├── reward.js           # Reward Pomodoro popup (ADHD)
-│   ├── milestone.js        # Micro-reward toast (every 5 min)
+│   ├── milestone.js        # Micro-reward toast (random 3-7 min interval)
 │   ├── pwa.js              # Service worker registration + Web Notifications
 │   └── utils.js            # formatTime, escapeHtml, getFolderName
 │
@@ -63,7 +63,7 @@ public/
 - **Background music** — Lofi / Ambient / Jazz; volume control, prev/next, mute
 - **Alarm sounds** — 5 options with volume control
 - **Star Rating (FAB)** — Auto-prompts after Long Break ends or when Finish Session is pressed; FAB (bottom-left) also opens it anytime; saves to Firebase Firestore
-- **Micro-reward toast** — Random encouraging message (10 variants) every 5 minutes during Pomodoro; auto-dismisses after 3.5s or can be closed manually
+- **Micro-reward toast** — Random encouraging message (10 variants) at a randomized 3-7 min interval during Pomodoro (intermittent reinforcement, not a fixed 5-min tick); auto-dismisses after 3.5s or can be closed manually
 - **Web Notifications** — Notifies when timer ends even if tab is not active
 - **Dark mode** — Full dark/light theme
 - **Fullscreen + Mobile** — Responsive with hamburger menu

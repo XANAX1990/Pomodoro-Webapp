@@ -12,7 +12,7 @@ export function initAudio(elements) {
 
 // Maps each alarm option to its sound file.
 const ALARM_FILES = {
-  Hassium: "assets/Alarm/hassium.mp3",
+  Hassium: "assets/Alarm/Hassium.mp3",
   "Chilled": "assets/Alarm/Chilled.mp3",
   "Radial": "assets/Alarm/Radial.mp3",
   "Morning glory": "assets/Alarm/Morning glory.mp3",
@@ -76,7 +76,14 @@ export function updateMusic() {
   bgmAudio.volume = volume;
 
   if (state.musicPlaying) {
-    bgmAudio.play().catch((e) => console.error("Failed to play local BGM:", e));
+    bgmAudio.play().catch((e) => {
+      // Autoplay ถูกบล็อก (เช่นสลับหน้าแล้วเบราว์เซอร์ไม่ถือว่ามี user gesture) — เดิม log
+      // เฉยๆ แต่ state.musicPlaying ยังเป็น true อยู่ ไอคอนเลยค้างโชว์ "กำลังเล่น" (pause icon)
+      // ทั้งที่จริงไม่มีเสียงออกเลย ต้องรีเซ็ต state แล้ว render ใหม่ให้ตรงความจริง
+      console.warn("autoplay ถูกบล็อก:", e);
+      state.musicPlaying = false;
+      updateMusic();
+    });
   } else {
     bgmAudio.pause();
   }

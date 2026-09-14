@@ -28,8 +28,10 @@ function updateHourglassProgress() {
   const total = Math.max(1, durationFor(state.mode));
   const elapsed = Math.max(0, Math.min(total, total - state.remaining));
   const progress = elapsed / total;
-  const topSand = 74 - (progress * 60);
-  const bottomSand = 24 + (progress * 58);
+  // top เริ่ม 74% ต้องไหลจนถึง 0% พอดี → multiplier 74 (74-74=0)
+  // bottom เริ่ม 24% ต้องไหลจนถึง 100% พอดี → multiplier 76 (24+76=100) ไม่ใช่ 74 (24+74=98 ไม่เต็ม)
+  const topSand = 74 - (progress * 74);
+  const bottomSand = 24 + (progress * 76);
 
   els.timerCircle.style.setProperty("--sand-top", `${topSand}%`);
   els.timerCircle.style.setProperty("--sand-bottom", `${bottomSand}%`);

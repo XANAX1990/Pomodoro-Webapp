@@ -1,4 +1,4 @@
-// milestone.js — Micro-Reward toast ทุก 5 นาที ระหว่าง Pomodoro
+// milestone.js — Micro-Reward toast ระหว่าง Pomodoro (สุ่มช่วง 3-7 นาที ดู randomMilestoneGap() ใน timer.js)
 
 const MESSAGES = [
   { emoji: "🔥", text: "ไฟแล่น! โฟกัสได้ดีมาก" },

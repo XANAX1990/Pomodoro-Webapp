@@ -29,9 +29,11 @@ const STATIC_FILES = [
   BASE + "icons/PWA512.png",
   BASE + "icons/PWA192.png",
   BASE + "icons/favicon.png",
-  // Firebase SDK (static JS ไฟล์จาก CDN) — ต้องแคชไว้ด้วย เพราะ main.js import
-  // ไฟล์พวกนี้แบบ top-level ถ้าโหลดไม่ได้ตอน offline โมดูลทั้งชุดจะพังไปด้วย
-  // (ต่างจาก Firestore/Analytics ที่เป็น live API เรียกจริงตอน runtime เท่านั้น)
+  // Firebase SDK (static JS ไฟล์จาก CDN) — ต้องแคชไว้ด้วย แม้ rating.js จะ dynamic import
+  // ไฟล์พวกนี้ตอนกดให้คะแนนจริงเท่านั้น (ไม่ใช่ top-level แล้ว) เพราะ dynamic import() ก็ยัง
+  // เป็น network request ปกติที่ผ่าน fetch handler นี้ — ถ้าไม่แคชไว้ล่วงหน้า พอ offline
+  // แล้วกดให้คะแนน import จะพังตอนนั้นทันที (ต่างจาก Firestore/Analytics ที่เป็น live API
+  // เรียกจริงตอน runtime เท่านั้น เลยห้าม cache)
   "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js",
   "https://www.gstatic.com/firebasejs/12.14.0/firebase-analytics.js",
   "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js",
@@ -76,8 +78,11 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
 
   // Firebase SDK ไฟล์ static จาก gstatic (firebase-app.js, firebase-auth.js, ...)
-  // แคช cache-first ได้เหมือนไฟล์ static อื่น เพราะ pin เวอร์ชันไว้ตายตัวแล้ว (12.14.0)
-  // ต่างจาก live API call ด้านล่างที่ต้อง network เสมอ
+  // ปล่อยให้ไหลลงไปโดน isCodeFile ด้านล่าง (ลงท้าย .js) เหมือนไฟล์โค้ดอื่นในโปรเจกต์ —
+  // จริงๆ แล้ววิ่งเป็น network-first + fallback เข้า cache ตอน offline ผ่าน .catch(() =>
+  // caches.match()) ไม่ใช่ cache-first ตรงๆ ตามที่เคยเขียนไว้ตรงนี้ (pin เวอร์ชันตายตัวแล้ว
+  // 12.14.0 ก็จริง แต่ที่ยอมให้ network-first ก็เพราะไม่มีผลเสียอะไร แค่ยิง request เช็คก่อน)
+  // ต่างจาก live API call ด้านล่างที่ห้าม cache เลย
   const isFirebaseSdkFile = url.hostname === "www.gstatic.com" && url.pathname.startsWith("/firebasejs/");
 
   // Firebase live API / analytics collect / recaptcha / cdnjs — ต้อง network เสมอ ห้าม cache
