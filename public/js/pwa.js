@@ -5,6 +5,21 @@
 // reg.showNotification() วิ่งผ่าน service worker ทำให้ขึ้นแม้แอปไม่ได้เปิดอยู่)
 let swRegistration = null;
 
+async function getServiceWorkerRegistration() {
+  if (swRegistration?.active) return swRegistration;
+  if (!("serviceWorker" in navigator)) return null;
+
+  try {
+    // register() สำเร็จไม่ได้แปลว่า SW พร้อมใช้งานแล้ว โดยเฉพาะการเปิด PWA
+    // ครั้งแรกบน iPad. ready จะรอจนมี active worker ที่ใช้ showNotification ได้จริง
+    swRegistration = await navigator.serviceWorker.ready;
+    return swRegistration;
+  } catch (e) {
+    console.warn("Service Worker is not ready:", e);
+    return null;
+  }
+}
+
 /* ── Service Worker ── */
 export async function registerServiceWorker() {
   if (!("serviceWorker" in navigator)) return;
@@ -17,6 +32,9 @@ export async function registerServiceWorker() {
     const reg = await navigator.serviceWorker.register("service-worker.js");
     swRegistration = reg;
     console.log("Service Worker registered:", reg.scope);
+    // เก็บ active registration กลับมาเมื่อ install/activate เสร็จ เพื่อไม่ให้
+    // notification แรกไปตก fallback ขณะที่ iPad ยัง activate SW ไม่เสร็จ
+    getServiceWorkerRegistration();
 
     // พบ SW เวอร์ชันใหม่ → สั่งเข้าควบคุมทันที
     reg.addEventListener("updatefound", () => {
@@ -51,7 +69,7 @@ export async function requestNotificationPermission() {
   return result;
 }
 
-export function sendTimerNotification(mode) {
+export async function sendTimerNotification(mode) {
   if (!("Notification" in window) || Notification.permission !== "granted") return;
 
   const messages = {
@@ -67,18 +85,21 @@ export function sendTimerNotification(mode) {
     badge: "icons/PWA192.png",
     tag: "pomodoro-timer",
     renotify: true,
+    data: { url: new URL("./", window.location.href).href },
   };
 
   try {
-    // ยิงผ่าน service worker registration ก่อนเสมอ (รองรับ PWA ตอนแอปไม่ได้เปิดอยู่/มือถือ)
-    if (swRegistration) {
-      swRegistration.showNotification(msg.title, options).catch((e) => {
-        console.warn("showNotification failed:", e);
-      });
+    // iPadOS รองรับ Notification ผ่าน ServiceWorkerRegistration เท่านั้น
+    // และต้องรอ worker active ไม่เช่นนั้น notification แรกหลังเปิดแอปจะหายไป
+    const registration = await getServiceWorkerRegistration();
+    if (registration) {
+      await registration.showNotification(msg.title, options);
       return;
     }
-    // fallback กรณี SW ยังไม่ได้ register (เช่น browser ไม่รองรับ SW)
-    new Notification(msg.title, options);
+    // fallback สำหรับ browser เก่าที่สร้าง Notification ได้จริงเท่านั้น
+    if (typeof Notification === "function") {
+      new Notification(msg.title, options);
+    }
   } catch (e) {
     console.warn("Notification failed:", e);
   }

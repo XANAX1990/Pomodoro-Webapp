@@ -1,7 +1,7 @@
 import { queryEls } from "./config.js";
 import { state } from "./state.js";
 import {
-  initTimer, setTimerRefs, switchModeManually, toggleTimer,
+  initTimer, setTimerRefs, switchModeManually, toggleTimer, syncTimerAfterBackground,
   buildPresetList, updatePreset, updateCustomValue, completeSession
 } from "./timer.js";
 import { initDarkMode, toggleDarkMode, updateDarkModeUI } from "./darkmode.js";
@@ -255,6 +255,15 @@ els.finishBtn?.addEventListener("click", () => {
 els.modeTabs.forEach((tab) => tab.addEventListener("click", () => switchModeManually(tab.dataset.mode)));
 els.skipBreakBtn.addEventListener("click", () => switchModeManually("rest"));
 els.skipLongBreakBtn.addEventListener("click", () => switchModeManually("long"));
+
+// iPadOS จะหยุด setInterval ระหว่างล็อกจอ จึงตรวจ deadline จาก wall-clock
+// ทันทีที่กลับมา visible/focus เพื่อไม่ให้ timer ค้าง และให้มี notification ทันทีที่ระบบปลุก PWA
+function syncTimerWhenAppReturns() {
+  if (!document.hidden) syncTimerAfterBackground();
+}
+document.addEventListener("visibilitychange", syncTimerWhenAppReturns);
+window.addEventListener("pageshow", syncTimerWhenAppReturns);
+window.addEventListener("focus", syncTimerWhenAppReturns);
 
 els.autoPomodoro.addEventListener("change", () => {
   state.autoPomodoro = els.autoPomodoro.checked;

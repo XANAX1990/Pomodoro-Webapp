@@ -55,27 +55,7 @@ export function toggleTimer(force, toggleDarkMode) {
       state.nextMilestoneAt = randomMilestoneGap();
     }
 
-    state.timerId = setInterval(() => {
-      const elapsed = Math.floor((Date.now() - state.startedAt) / 1000);
-      state.remaining = Math.max(0, state.remainingAtStart - elapsed);
-
-      // Milestone: สุ่มช่วงเวลา (intermittent) ระหว่าง Pomodoro ที่กำลังวิ่งอยู่
-      if (state.mode === "pomodoro" && state.nextMilestoneAt != null) {
-        const totalElapsed = durationFor("pomodoro") - state.remainingAtStart + elapsed;
-        if (totalElapsed >= state.nextMilestoneAt) {
-          const minuteMark = Math.round(totalElapsed / 60);
-          onMilestoneRef?.(minuteMark);
-          state.nextMilestoneAt = totalElapsed + randomMilestoneGap();
-        }
-      }
-
-      if (state.remaining <= 0) {
-        completeSession();
-        return;
-      }
-      saveSharedTimerState();
-      onTickRender();
-    }, 500); // poll ทุก 500ms เพื่อให้แม่นขึ้น
+    state.timerId = setInterval(tickTimer, 500); // poll ทุก 500ms เพื่อให้แม่นขึ้น
 
     // Auto dark mode — re-check ก่อน fire จริง
     if (state.autoDarkMode && !state.darkMode) {
@@ -89,6 +69,38 @@ export function toggleTimer(force, toggleDarkMode) {
   }
   saveSharedTimerState();
   onTickRender();
+}
+
+// iPadOS/Android จะ throttle หรือพัก JavaScript เมื่อสลับแอปหรือล็อกจอ
+// จึงห้ามลดเวลาตามจำนวนครั้งที่ interval ถูกเรียก ต้องคำนวณจากเวลาจริงทุกครั้ง
+function tickTimer() {
+  if (!state.running) return;
+
+  const elapsed = Math.floor((Date.now() - state.startedAt) / 1000);
+  state.remaining = Math.max(0, state.remainingAtStart - elapsed);
+
+  // Milestone: สุ่มช่วงเวลา (intermittent) ระหว่าง Pomodoro ที่กำลังวิ่งอยู่
+  if (state.mode === "pomodoro" && state.nextMilestoneAt != null) {
+    const totalElapsed = durationFor("pomodoro") - state.remainingAtStart + elapsed;
+    if (totalElapsed >= state.nextMilestoneAt) {
+      const minuteMark = Math.round(totalElapsed / 60);
+      onMilestoneRef?.(minuteMark);
+      state.nextMilestoneAt = totalElapsed + randomMilestoneGap();
+    }
+  }
+
+  if (state.remaining <= 0) {
+    completeSession();
+    return;
+  }
+  saveSharedTimerState();
+  onTickRender();
+}
+
+// เรียกเมื่อหน้าเว็บถูกปลุกกลับจากการล็อกจอ/สลับแอป เพื่อจบ session
+// และส่ง notification ทันทีหากหมดเวลาไประหว่างที่ browser พัก JavaScript
+export function syncTimerAfterBackground() {
+  tickTimer();
 }
 
 export function completeSession() {

@@ -1,5 +1,5 @@
 // service-worker.js
-const CACHE_NAME = "pomodoro-12-09-2026";
+const CACHE_NAME = "pomodoro-14-09-2026-notifications";
 
 // ใช้ path สัมพัทธ์กับ scope ของ service worker เอง (ไม่ hardcode "/")
 // เพื่อให้ deploy ใน subfolder (เช่น /pomodoro/) แล้วไม่ 404 ทำให้ install ทั้งชุดพัง
@@ -71,6 +71,40 @@ self.addEventListener("activate", (event) => {
 // เพื่อป้องกันไม่ให้ผู้ใช้ติดอยู่กับโค้ดเวอร์ชันเก่าผสมใหม่
 self.addEventListener("message", (event) => {
   if (event.data === "SKIP_WAITING") self.skipWaiting();
+});
+
+// Web Push ปลุก Service Worker ได้แม้ PWA ถูกพัก/ล็อกจออยู่
+// การตั้งเวลาส่ง push ต้องทำที่ backend (ดู BACKGROUND_NOTIFICATION_SETUP.md)
+self.addEventListener("push", (event) => {
+  let payload = {};
+  try {
+    payload = event.data ? event.data.json() : {};
+  } catch {
+    payload = { body: event.data?.text() };
+  }
+
+  const title = payload.title || "Pomodoro Timer";
+  const options = {
+    body: payload.body || "ครบเวลาที่ตั้งไว้แล้ว",
+    icon: BASE + "icons/PWA192.png",
+    badge: BASE + "icons/PWA192.png",
+    tag: payload.tag || "pomodoro-timer",
+    renotify: true,
+    data: { url: payload.url || BASE },
+  };
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const targetUrl = new URL(event.notification.data?.url || BASE, self.location.origin).href;
+  event.waitUntil(
+    clients.matchAll({ type: "window", includeUncontrolled: true }).then((windows) => {
+      const existing = windows.find((client) => client.url.startsWith(self.location.origin));
+      if (existing) return existing.navigate(targetUrl).then(() => existing.focus());
+      return clients.openWindow(targetUrl);
+    })
+  );
 });
 
 // Fetch — cache-first for static, network-first for Firebase
