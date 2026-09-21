@@ -13,6 +13,10 @@ export function setUIRefs({ stopAlarm }) {
 }
 
 export function openCustomizerPanel(name = "home") {
+  // เดิมดับ alarm เฉพาะตอนปิดทั้งแผง Customizer (closeDropdowns) — แต่กด "กลับ" ออกจาก
+  // หน้า Alarm ไปหน้าอื่นในแผงเดียวกัน (ยังไม่ได้ปิด Customizer) เสียงทดสอบยังเล่นค้างอยู่
+  // เพราะ path นี้ไม่เคยเรียก stopAlarm เลย — ดับทุกครั้งที่สลับหน้าย่อย ไม่ใช่แค่ตอนปิดทั้งแผง
+  stopAlarmRef?.();
   document.querySelectorAll("[data-panel]").forEach((panel) => {
     panel.hidden = panel.dataset.panel !== name;
   });

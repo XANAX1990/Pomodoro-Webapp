@@ -10,13 +10,6 @@
 let els;
 let selectedRating = 0;
 
-// พิมพ์ uid ของ Firebase Auth ลง console เฉพาะตอนเปิด dev-test-panel เท่านั้น (ปกติ
-// ผู้ใช้ทั่วไป/กรรมการสอบเปิด F12 แล้วไม่ควรเห็น uid หลุดออกมาให้เห็นเฉยๆ)
-function isDevMode() {
-  const panel = document.querySelector(".dev-test-panel");
-  return !!panel && !panel.hidden;
-}
-
 let _authReady = null;
 function ensureAuth() {
   if (!_authReady) {
@@ -38,13 +31,13 @@ function ensureAuth() {
         unsub = onAuthStateChanged(auth, (user) => {
           if (user) {
             clearTimeout(timer); unsub?.();
-            if (isDevMode()) console.log("Firebase Auth พร้อม uid:", user.uid);
+            console.log("Firebase Auth พร้อม uid:", user.uid);
             return resolve(user);
           }
           signInAnonymously(auth)
             .then((cred) => {
               clearTimeout(timer); unsub?.();
-              if (isDevMode()) console.log("Firebase Auth พร้อม uid:", cred.user.uid);
+              console.log("Firebase Auth พร้อม uid:", cred.user.uid);
               resolve(cred.user);
             })
             .catch((err) => { clearTimeout(timer); unsub?.(); reject(err); });
