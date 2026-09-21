@@ -38,7 +38,6 @@ function ensureAuth() {
           if (user) {
             clearTimeout(timer); unsub?.();
             const msg = `Firebase Auth พร้อม uid: ${user.uid}`;
-            console.log(msg);
             updateDevStatus(msg);
             return resolve(user);
           }
@@ -46,7 +45,6 @@ function ensureAuth() {
             .then((cred) => {
               clearTimeout(timer); unsub?.();
               const msg = `Firebase Auth พร้อม uid: ${cred.user.uid}`;
-              console.log(msg);
               updateDevStatus(msg);
               resolve(cred.user);
             })
