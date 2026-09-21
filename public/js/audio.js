@@ -55,6 +55,12 @@ export function playAlarm() {
   if (file) playAlarmFile(file);
 }
 
+// กดฟังตัวอย่าง alarm ใน Customize (testAlarmBtn / เปลี่ยน radio) แล้วเสียงยังเล่นค้าง
+// ต่อแม้ปิดแผง Customize ไปแล้ว — ต้อง export ให้ ui.js เรียกหยุดตอนปิดแผงได้
+export function stopAlarm() {
+  stopCurrentAlarm();
+}
+
 export function updateMusic() {
   const track = tracks[state.selectedTrack];
   // เก็บ volume ลง state ทุกครั้งที่ slider ขยับ เพื่อ persist ผ่าน sessionStorage

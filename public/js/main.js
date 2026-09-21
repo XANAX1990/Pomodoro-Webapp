@@ -7,11 +7,11 @@ import {
 import { initDarkMode, toggleDarkMode, updateDarkModeUI } from "./darkmode.js";
 import { initTasks, addTask, clearDoneTasks, clearAllTasks, renderTasks } from "./tasks.js";
 import {
-  initAudio, setAudioRefs, playAlarm, updateMusic,
+  initAudio, setAudioRefs, playAlarm, stopAlarm, updateMusic,
   prevTrack, nextTrack, renderPlaylist
 } from "./audio.js";
 import {
-  initUI, openCustomizerPanel, toggleDropdown, closeDropdowns,
+  initUI, setUIRefs, openCustomizerPanel, toggleDropdown, closeDropdowns,
   toggleFullscreen, toggleMobileMenu
 } from "./ui.js";
 import { initRender, render } from "./render.js";
@@ -56,6 +56,7 @@ initTasks(els);
 initAudio(els);
 setAudioRefs({ closeDropdowns });
 initUI(els);
+setUIRefs({ stopAlarm });
 initRender(els);
 initRating(els);
 initMovement();
@@ -169,6 +170,10 @@ document.querySelectorAll(".modal-container").forEach((modal) => {
 /* ---------- Global click-outside ---------- */
 document.addEventListener("click", (event) => {
   if (!event.target.closest(".dropdown, .top-actions, .task-menu, .more-btn")) {
+    // เดิมปิด customizer ตรงๆ โดยไม่ผ่าน closeDropdowns() เลย ทำให้ข้าม logic ดับ alarm
+    // ที่เล่นทดสอบค้างอยู่ (testAlarmBtn / เปลี่ยน radio ใน Customize) — คลิกออกนอกแผง
+    // Customize แล้วเสียงยังเล่นต่อ เพราะ path นี้ไม่เคยเรียก stopAlarm เลย
+    if (els.customizer && !els.customizer.hidden) stopAlarm();
     if (els.customizer) els.customizer.hidden = true;
     if (els.taskMenu) els.taskMenu.hidden = true;
     if (els.customizeBtn) els.customizeBtn.setAttribute("aria-expanded", "false");

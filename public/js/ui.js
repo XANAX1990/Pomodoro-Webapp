@@ -1,7 +1,15 @@
 let els;
 
+// Injected from main.js (audio.js) เพื่อดับเสียง alarm ที่กำลังเล่นทดสอบอยู่
+// ตอนปิดแผง Customize — กันเสียงเล่นค้างหลังออกจากหน้า Customize ไปแล้ว
+let stopAlarmRef = null;
+
 export function initUI(elements) {
   els = elements;
+}
+
+export function setUIRefs({ stopAlarm }) {
+  stopAlarmRef = stopAlarm;
 }
 
 export function openCustomizerPanel(name = "home") {
@@ -25,6 +33,9 @@ export function toggleDropdown(button, dropdown) {
 }
 
 export function closeDropdowns() {
+  // ต้องเช็คว่า customizer เปิดอยู่จริงก่อนค่อยดับ alarm (ฟังก์ชันนี้ถูกเรียกทุกครั้งที่
+  // เปิด dropdown อื่นด้วย เช่น playlist — ไม่อยากดับเสียงที่ไม่ได้เกี่ยวกับ Customize)
+  if (els.customizer && !els.customizer.hidden) stopAlarmRef?.();
   if (els.customizer) els.customizer.hidden = true;
   if (els.taskMenu) els.taskMenu.hidden = true;
   if (els.playlistMenu) els.playlistMenu.classList.remove("open");
