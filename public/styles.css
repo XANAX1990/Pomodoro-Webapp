@@ -1914,7 +1914,8 @@ body.tasks-collapsed .fab {
   z-index: 500;
 }
 
-.dev-test-panel button {
+.dev-test-panel button,
+.dev-test-panel .dev-auth-status {
   font-size: 12px;
   padding: 6px 10px;
   border-radius: 8px;
@@ -1926,11 +1927,17 @@ body.tasks-collapsed .fab {
   white-space: nowrap;
 }
 
+.dev-test-panel .dev-auth-status {
+  cursor: default;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
 .dev-test-panel button:hover {
   background: #f2f2f2;
 }
 
-html.dark-mode .dev-test-panel button {
+html.dark-mode .dev-test-panel button,
+html.dark-mode .dev-test-panel .dev-auth-status {
   background: #2a2a2a;
   color: #eee;
   border-color: rgba(255, 255, 255, 0.15);

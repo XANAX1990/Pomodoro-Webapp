@@ -408,6 +408,13 @@
 
   </div> <!-- /app-shell -->
 
+  <!-- ====== Dev Test Panel (Firebase Auth) ======
+       ซ่อนด้วย hidden ก่อนวันสอบ/deploy จริง — เปิดใช้ตอน dev โดยลบ hidden ออก
+       หรือรันใน console: document.querySelector('.dev-test-panel').hidden = false -->
+  <div class="dev-test-panel" hidden>
+    <div class="dev-auth-status" id="devAuthStatus">Firebase Auth: กำลังเชื่อมต่อ...</div>
+  </div>
+
   <script type="module" src="js/main.js"></script>
 </body>
 

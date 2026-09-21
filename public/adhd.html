@@ -417,10 +417,11 @@
 
   </div> <!-- /app-shell -->
 
-  <!-- ====== Dev Test Panel (ทดสอบ Movement / Reward / Milestone Toast) ======
+  <!-- ====== Dev Test Panel (ทดสอบ Movement / Reward / Milestone Toast / Firebase Auth) ======
        ซ่อนด้วย hidden ก่อนวันสอบ/deploy จริง — เปิดใช้ตอน dev โดยลบ hidden ออก
        หรือรันใน console: document.querySelector('.dev-test-panel').hidden = false -->
   <div class="dev-test-panel" hidden>
+    <div class="dev-auth-status" id="devAuthStatus">Firebase Auth: กำลังเชื่อมต่อ...</div>
     <button id="testMovementBtn" type="button">🧘 Test Movement</button>
     <button id="testRewardBtn" type="button">🎉 Test Reward</button>
     <button id="testMilestoneBtn" type="button">🔥 Test Toast</button>

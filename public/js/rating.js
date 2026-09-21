@@ -22,25 +22,39 @@ function ensureAuth() {
         // แบบ synchronous ก่อน assign เสร็จ — กัน ReferenceError ซ้อนตอน timeout ยิง
         let unsub = null;
 
+        const updateDevStatus = (text) => {
+          const el = document.getElementById("devAuthStatus");
+          if (el) el.textContent = text;
+        };
+
         // กันค้างรอตลอดไปถ้า App Check/reCAPTCHA เน็ตช้าหรือล้มเหลวเงียบๆ
         const timer = setTimeout(() => {
           unsub?.();
+          updateDevStatus("Firebase Auth: Timeout");
           reject(new Error("Firebase Auth timeout"));
         }, 8000);
 
         unsub = onAuthStateChanged(auth, (user) => {
           if (user) {
             clearTimeout(timer); unsub?.();
-            console.log("Firebase Auth พร้อม uid:", user.uid);
+            const msg = `Firebase Auth พร้อม uid: ${user.uid}`;
+            console.log(msg);
+            updateDevStatus(msg);
             return resolve(user);
           }
           signInAnonymously(auth)
             .then((cred) => {
               clearTimeout(timer); unsub?.();
-              console.log("Firebase Auth พร้อม uid:", cred.user.uid);
+              const msg = `Firebase Auth พร้อม uid: ${cred.user.uid}`;
+              console.log(msg);
+              updateDevStatus(msg);
               resolve(cred.user);
             })
-            .catch((err) => { clearTimeout(timer); unsub?.(); reject(err); });
+            .catch((err) => {
+              clearTimeout(timer); unsub?.();
+              updateDevStatus("Firebase Auth: เชื่อมต่อไม่สำเร็จ");
+              reject(err);
+            });
         });
       });
     })();
