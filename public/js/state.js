@@ -54,11 +54,16 @@ const defaultPreset = isAdhdPage ? "baby" : "popular";
 const resolvedPreset = (shared?.preset && (isAdhdPage || shared.preset !== "baby"))
   ? shared.preset
   : defaultPreset;
+// ถ้า preset ถูก override → ต้อง reset remaining ด้วย ไม่งั้นเวลาจะเป็นของ preset เก่า
+const presetCarryOverAllowed = shared?.preset && (isAdhdPage || shared.preset !== "baby");
+const effectiveRemaining = presetCarryOverAllowed
+  ? (restoredRemaining ?? presets[resolvedPreset].pomodoro * 60)
+  : presets[resolvedPreset].pomodoro * 60;
 
 export const state = {
   mode: shared?.mode || "pomodoro",
   preset: resolvedPreset,
-  remaining: restoredRemaining ?? presets[resolvedPreset].pomodoro * 60,
+  remaining: effectiveRemaining,
   running: restoredRunning,
   expiredWhileAway: !!(shared?.running && shared?.startedAt && !restoredRunning),
   timerId: null,
