@@ -1,5 +1,5 @@
 // service-worker.js
-const CACHE_NAME = "pomodoro-1ุ6-09-2026-notifications";
+const CACHE_NAME = "pomodoro-24-09-2026-notifications";
 
 // ใช้ path สัมพัทธ์กับ scope ของ service worker เอง (ไม่ hardcode "/")
 // เพื่อให้ deploy ใน subfolder (เช่น /pomodoro/) แล้วไม่ 404 ทำให้ install ทั้งชุดพัง
