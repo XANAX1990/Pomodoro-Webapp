@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>สถิติคะแนนความพึงพอใจ — Pomodoro Webapp</title>
+<!-- ตรวจสอบ dark mode ทันทีเพื่อป้องกันหน้าจอกะพริบ (FOUC) -->
+<script>
+  if (localStorage.getItem("pomodoroDarkMode") === "true") {
+    document.documentElement.classList.add("dark-mode");
+  }
+</script>
+<!-- หน้านี้เป็นหน้าเสริมสำหรับดูสรุปผล ไม่ได้ผูกกับ flow หลักของแอป (Start/Pause/Task)
+     ไม่ต้องพิมพ์มือใน Excel — ดึงจาก Firestore ตรงๆ แล้ว aggregate สร้าง Pie Chart เลย -->
+<!-- เดิมโหลด Chart.js จาก jsdelivr CDN — พังเป็น "Chart is not defined" เพราะ wifi/firewall
+     บางที่ (เช่น ห้องสอบ) บล็อก CDN ภายนอก ทำนองเดียวกับปัญหา gstatic ที่เจอกับ Firebase
+     ก่อนหน้านี้ (ดู comment ใน rating.js) — เปลี่ยนมาแนบไฟล์ chart.umd.js ไว้ในโปรเจกต์เอง
+     ไม่ต้องพึ่งเน็ตภายนอกตอน demo/สอบ -->
+<script src="js/chart.umd.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Segoe UI", Tahoma, sans-serif;
+    max-width: 760px;
+    margin: 40px auto;
+    padding: 0 20px;
+    color: #1c1c1c;
+    background: #f7f7fa;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+  .nav-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.88rem;
+    color: #2f68df;
+    text-decoration: none;
+    margin-bottom: 12px;
+    font-weight: 500;
+    transition: color 0.2s ease;
+  }
+  .nav-back:hover {
+    text-decoration: underline;
+  }
+  h1 { font-size: 1.4rem; margin-bottom: 4px; transition: color 0.3s ease; }
+  .subtitle { color: #666; margin-top: 0; margin-bottom: 24px; font-size: 0.9rem; transition: color 0.3s ease; }
+  .subtitle code {
+    background: #eef1f6;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.85em;
+  }
+  .card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+    margin-bottom: 20px;
+    border: 1px solid transparent;
+    transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+  .stat-row {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+  .stat-box {
+    flex: 1;
+    min-width: 110px;
+    background: #f0f2ff;
+    border-radius: 10px;
+    padding: 14px;
+    text-align: center;
+    border: 1px solid transparent;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+  }
+  .stat-box .num { font-size: 1.6rem; font-weight: 700; color: #2f68df; transition: color 0.3s ease; }
+  .stat-box .label { font-size: 0.8rem; color: #555; margin-top: 2px; transition: color 0.3s ease; }
+  canvas { max-width: 100%; }
+  #status { color: #666; font-size: 0.9rem; transition: color 0.3s ease; }
+  #errorBox {
+    display: none;
+    background: #fdecea;
+    color: #b3261e;
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 0.9rem;
+    margin-bottom: 16px;
+    white-space: pre-wrap;
+  }
+  .toggle-row { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .toggle-row button {
+    border: 1px solid #ccc;
+    background: #fff;
+    border-radius: 999px;
+    padding: 6px 14px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .toggle-row button:hover {
+    border-color: #aaa;
+  }
+  .toggle-row button.active {
+    background: #2f68df;
+    color: #fff;
+    border-color: #2f68df;
+  }
+  #refreshBtn {
+    border: 0;
+    background: #2f68df;
+    color: #fff;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+  #refreshBtn:hover {
+    background: #2256c5;
+  }
+
+  /* ปุ่ม Dark Mode ที่มุมขวาบน */
+  .dark-mode-btn {
+    position: fixed;
+    top: 20px;
+    right: 24px;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 1px solid #d1d5db;
+    background: #ffffff;
+    color: #374151;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+    transition: all 0.25s ease;
+    z-index: 1000;
+  }
+  .dark-mode-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+    color: #111827;
+  }
+  .dark-mode-btn:active {
+    transform: scale(0.95);
+  }
+  .dark-mode-btn svg {
+    width: 22px;
+    height: 22px;
+    transition: transform 0.3s ease;
+  }
+  .dark-mode-btn .sun-icon {
+    display: none;
+  }
+  .dark-mode-btn .moon-icon {
+    display: block;
+  }
+
+  /* Dark mode styles */
+  html.dark-mode {
+    background: #18191c;
+    color: #f8fafc;
+  }
+  html.dark-mode body {
+    background: #18191c;
+    color: #f8fafc;
+  }
+  html.dark-mode .nav-back {
+    color: #60a5fa;
+  }
+  html.dark-mode h1 {
+    color: #f8fafc;
+  }
+  html.dark-mode .subtitle {
+    color: #94a3b8;
+  }
+  html.dark-mode .subtitle code {
+    background: #2a2c38;
+    color: #93c5fd;
+  }
+  html.dark-mode .card {
+    background: #22232a;
+    border-color: #313340;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  }
+  html.dark-mode .stat-box {
+    background: #2a2d3b;
+    border-color: #383c50;
+  }
+  html.dark-mode .stat-box .num {
+    color: #60a5fa;
+  }
+  html.dark-mode .stat-box .label {
+    color: #94a3b8;
+  }
+  html.dark-mode #status {
+    color: #94a3b8;
+  }
+  html.dark-mode #errorBox {
+    background: #39191d;
+    color: #fca5a5;
+    border: 1px solid #7f1d1d;
+  }
+  html.dark-mode .toggle-row button {
+    border-color: #3d4256;
+    background: #2a2d3b;
+    color: #cbd5e1;
+  }
+  html.dark-mode .toggle-row button:hover {
+    background: #34384a;
+    border-color: #4b526b;
+  }
+  html.dark-mode .toggle-row button.active {
+    background: #2f68df;
+    border-color: #2f68df;
+    color: #fff;
+  }
+  html.dark-mode .dark-mode-btn {
+    background: #2a2d3b;
+    border-color: #3d4256;
+    color: #fbbf24;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
+  }
+  html.dark-mode .dark-mode-btn:hover {
+    color: #fde047;
+    border-color: #60a5fa;
+  }
+  html.dark-mode .dark-mode-btn .moon-icon {
+    display: none;
+  }
+  html.dark-mode .dark-mode-btn .sun-icon {
+    display: block;
+  }
+
+  @media (max-width: 600px) {
+    body {
+      margin: 20px auto;
+      padding-top: 36px;
+    }
+    .dark-mode-btn {
+      top: 14px;
+      right: 14px;
+      width: 40px;
+      height: 40px;
+    }
+  }
+</style>
+</head>
+<body>
+  <!-- ปุ่มสลับโหมด แสดงเป็นรูปพระจันทร์ที่มุมขวาบน -->
+  <button id="darkModeBtn" class="dark-mode-btn" aria-label="Toggle Dark Mode" title="สลับ Dark Mode">
+    <!-- ไอคอนพระจันทร์เมื่ออยู่ในโหมดสว่าง -->
+    <svg class="moon-icon" viewBox="0 0 20 20" fill="currentColor">
+      <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
+    </svg>
+    <!-- ไอคอนพระอาทิตย์เมื่ออยู่ในโหมดมืด เพื่อกดสลับกลับ -->
+    <svg class="sun-icon" viewBox="0 0 20 20" fill="currentColor">
+      <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.46 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd" />
+    </svg>
+  </button>
+
+  <a href="index.html" class="nav-back">← กลับหน้าหลัก</a>
+  <h1>สถิติคะแนนความพึงพอใจ</h1>
+  <p class="subtitle">สรุปคะแนน 1–5 ดาวจากคอลเลกชัน <code>ratings</code> ใน Firestore</p>
+
+  <div id="errorBox"></div>
+
+  <div class="card">
+    <div class="toggle-row" id="modeToggle">
+      <button data-mode="all" class="active">ทั้งหมด</button>
+      <button data-mode="general">General</button>
+      <button data-mode="adhd">ADHD</button>
+      <button id="refreshBtn" style="margin-left:auto;">รีเฟรช</button>
+    </div>
+
+    <div class="stat-row" id="statRow"></div>
+
+    <p id="status">กำลังโหลดข้อมูล...</p>
+    <canvas id="ratingPieChart" height="320"></canvas>
+  </div>
+
+  <script type="module">
+    import { db, auth } from "./firebase-config.js";
+    import { signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
+    import { collection, getDocs } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+
+    const statusEl = document.getElementById("status");
+    const errorBox = document.getElementById("errorBox");
+    const statRow = document.getElementById("statRow");
+    const modeToggle = document.getElementById("modeToggle");
+    const refreshBtn = document.getElementById("refreshBtn");
+    const darkModeBtn = document.getElementById("darkModeBtn");
+    const ctx = document.getElementById("ratingPieChart");
+
+    let allDocs = []; // { rating, mode } ดิบจาก Firestore เก็บไว้ในหน่วยความจำ ไม่ต้อง query ซ้ำทุกครั้งที่สลับ filter
+    let chart = null;
+    let currentFilter = "all";
+
+    function isDarkMode() {
+      return document.documentElement.classList.contains("dark-mode");
+    }
+
+    function toggleDarkMode() {
+      const willBeDark = !isDarkMode();
+      document.documentElement.classList.toggle("dark-mode", willBeDark);
+      localStorage.setItem("pomodoroDarkMode", String(willBeDark));
+
+      if (chart && chart.options?.plugins?.legend?.labels) {
+        chart.options.plugins.legend.labels.color = willBeDark ? "#cbd5e1" : "#4b5563";
+        chart.update();
+      }
+    }
+
+    if (darkModeBtn) {
+      darkModeBtn.addEventListener("click", toggleDarkMode);
+    }
+
+    function showError(msg) {
+      errorBox.textContent = msg;
+      errorBox.style.display = "block";
+    }
+
+    function ensureAuthReady() {
+      return new Promise((resolve, reject) => {
+        const timer = setTimeout(() => reject(new Error("Auth timeout")), 8000);
+        const unsub = onAuthStateChanged(auth, (user) => {
+          if (user) { clearTimeout(timer); unsub(); return resolve(user); }
+          signInAnonymously(auth)
+            .then((cred) => { clearTimeout(timer); unsub(); resolve(cred.user); })
+            .catch((e) => { clearTimeout(timer); unsub(); reject(e); });
+        });
+      });
+    }
+
+    async function loadRatings() {
+      statusEl.textContent = "กำลังโหลดข้อมูล...";
+      errorBox.style.display = "none";
+      if (typeof Chart === "undefined") {
+        statusEl.textContent = "โหลด Chart.js ไม่สำเร็จ";
+        showError(
+          "ไม่พบไลบรารี Chart.js (js/chart.umd.js) — เช็คว่าไฟล์นี้อยู่ในโฟลเดอร์ js/ " +
+          "ข้างๆ ไฟล์ stats.html จริงหรือไม่ และเปิดหน้านี้ผ่าน server (ไม่ใช่เปิดไฟล์ตรงๆ แบบ file://)"
+        );
+        return;
+      }
+      try {
+        await ensureAuthReady();
+        const snap = await getDocs(collection(db, "ratings"));
+        allDocs = snap.docs.map((d) => d.data());
+        statusEl.textContent = `โหลดสำเร็จ — ทั้งหมด ${allDocs.length} รายการ`;
+        render();
+      } catch (e) {
+        console.error(e);
+        statusEl.textContent = "โหลดข้อมูลไม่สำเร็จ";
+        showError(
+          "ดึงข้อมูลจาก Firestore ไม่สำเร็จ: " + (e?.message || e) +
+          "\nถ้าเจอ permission-denied ให้เช็ค Firestore Security Rules ว่าอนุญาตให้ authenticated user อ่าน collection 'ratings' ได้"
+        );
+      }
+    }
+
+    function aggregate(docs) {
+      const counts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+      docs.forEach((d) => {
+        const r = Number(d.rating);
+        if (counts[r] !== undefined) counts[r]++;
+      });
+      return counts;
+    }
+
+    function render() {
+      const filtered = currentFilter === "all"
+        ? allDocs
+        : allDocs.filter((d) => d.mode === currentFilter);
+
+      const counts = aggregate(filtered);
+      const total = filtered.length;
+      const avg = total
+        ? (Object.entries(counts).reduce((s, [star, n]) => s + Number(star) * n, 0) / total).toFixed(2)
+        : "-";
+
+      statRow.innerHTML = `
+        <div class="stat-box"><div class="num">${total}</div><div class="label">รายการทั้งหมด</div></div>
+        <div class="stat-box"><div class="num">${avg}</div><div class="label">คะแนนเฉลี่ย</div></div>
+      `;
+
+      const labels = ["1 ดาว", "2 ดาว", "3 ดาว", "4 ดาว", "5 ดาว"];
+      const data = [1, 2, 3, 4, 5].map((n) => counts[n]);
+      const colors = ["#e5484d", "#f0a04b", "#f3c94c", "#8bc34a", "#2f9e44"];
+
+      if (chart) {
+        chart.data.datasets[0].data = data;
+        if (chart.options?.plugins?.legend?.labels) {
+          chart.options.plugins.legend.labels.color = isDarkMode() ? "#cbd5e1" : "#4b5563";
+        }
+        chart.update();
+        return;
+      }
+      chart = new Chart(ctx, {
+        type: "pie",
+        data: {
+          labels,
+          datasets: [{ data, backgroundColor: colors }],
+        },
+        options: {
+          plugins: {
+            legend: {
+              position: "bottom",
+              labels: {
+                color: isDarkMode() ? "#cbd5e1" : "#4b5563",
+                font: { family: '"Segoe UI", Tahoma, sans-serif' },
+              },
+            },
+            tooltip: {
+              callbacks: {
+                label: (item) => {
+                  const val = item.raw;
+                  const pct = total ? ((val / total) * 100).toFixed(1) : 0;
+                  return `${item.label}: ${val} รายการ (${pct}%)`;
+                },
+              },
+            },
+          },
+        },
+      });
+    }
+
+    modeToggle.querySelectorAll("button[data-mode]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        modeToggle.querySelectorAll("button[data-mode]").forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        currentFilter = btn.dataset.mode;
+        render();
+      });
+    });
+
+    refreshBtn.addEventListener("click", loadRatings);
+
+    loadRatings();
+  </script>
+</body>
+</html>
