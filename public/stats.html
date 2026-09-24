@@ -77,18 +77,54 @@
   }
   .stat-box .num { font-size: 1.6rem; font-weight: 700; color: #2f68df; transition: color 0.3s ease; }
   .stat-box .label { font-size: 0.8rem; color: #555; margin-top: 2px; transition: color 0.3s ease; }
-  /* ย่อ pie chart — จำกัดความกว้างและความสูง ไม่ต้องเลื่อนหน้า */
+  /* Pie chart layout */
+  .pie-section {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 4px;
+  }
   .pie-wrapper {
     display: flex;
     justify-content: center;
     align-items: center;
-    max-height: 240px;
-    overflow: hidden;
+    flex-shrink: 0;
   }
   canvas { max-width: 100%; }
   #ratingPieChart {
-    max-height: 220px;
-    max-width: 220px;
+    width: 300px;
+    height: 300px;
+    max-width: 300px;
+    max-height: 300px;
+  }
+
+  /* Custom legend */
+  .pie-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 100px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.88rem;
+    color: #374151;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: color 0.3s ease;
+  }
+  .legend-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  html.dark-mode .legend-item {
+    color: #cbd5e1;
   }
 
   /* Star rating breakdown bars */
@@ -355,9 +391,12 @@
 
     <p id="status">กำลังโหลดข้อมูล...</p>
 
-    <!-- Pie Chart (ย่อให้พอดีหน้าจอ) -->
-    <div class="pie-wrapper">
-      <canvas id="ratingPieChart"></canvas>
+    <!-- Pie Chart + Legend เรียงแนวนอน -->
+    <div class="pie-section">
+      <div class="pie-wrapper">
+        <canvas id="ratingPieChart"></canvas>
+      </div>
+      <div class="pie-legend" id="pieLegend"></div>
     </div>
 
     <!-- Star Rating Breakdown (ขยายส่วนนี้) -->
@@ -471,6 +510,7 @@
 
       // Star breakdown bars
       const starColors = ["#e5484d", "#f0a04b", "#f3c94c", "#8bc34a", "#2f9e44"];
+      const starLabels = ["1 ดาว", "2 ดาว", "3 ดาว", "4 ดาว", "5 ดาว"];
       const starBreakdown = document.getElementById("starBreakdown");
       starBreakdown.innerHTML = `<h3>คะแนนแต่ละดาว</h3>` + [5,4,3,2,1].map((star) => {
         const count = counts[star];
@@ -487,15 +527,25 @@
           </div>`;
       }).join("");
 
+      // Custom legend (เรียงในแนวตั้งข้างๆ chart)
+      const pieLegend = document.getElementById("pieLegend");
+      pieLegend.innerHTML = [1,2,3,4,5].map((star) => {
+        const color = starColors[star - 1];
+        const count = counts[star];
+        return `
+          <div class="legend-item">
+            <div class="legend-dot" style="background:${color};"></div>
+            <span>${starLabels[star-1]}</span>
+            <span style="color:#9ca3af;font-size:0.8rem;margin-left:2px;">(${count})</span>
+          </div>`;
+      }).join("");
+
       const labels = ["1 ดาว", "2 ดาว", "3 ดาว", "4 ดาว", "5 ดาว"];
       const data = [1, 2, 3, 4, 5].map((n) => counts[n]);
       const colors = ["#e5484d", "#f0a04b", "#f3c94c", "#8bc34a", "#2f9e44"];
 
       if (chart) {
         chart.data.datasets[0].data = data;
-        if (chart.options?.plugins?.legend?.labels) {
-          chart.options.plugins.legend.labels.color = isDarkMode() ? "#cbd5e1" : "#4b5563";
-        }
         chart.update();
         return;
       }
@@ -507,13 +557,7 @@
         },
         options: {
           plugins: {
-            legend: {
-              position: "bottom",
-              labels: {
-                color: isDarkMode() ? "#cbd5e1" : "#4b5563",
-                font: { family: '"Segoe UI", Tahoma, sans-serif' },
-              },
-            },
+            legend: { display: false }, // ใช้ custom legend HTML แทน
             tooltip: {
               callbacks: {
                 label: (item) => {
