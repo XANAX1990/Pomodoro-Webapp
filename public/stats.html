@@ -77,7 +77,81 @@
   }
   .stat-box .num { font-size: 1.6rem; font-weight: 700; color: #2f68df; transition: color 0.3s ease; }
   .stat-box .label { font-size: 0.8rem; color: #555; margin-top: 2px; transition: color 0.3s ease; }
+  /* ย่อ pie chart — จำกัดความกว้างและความสูง ไม่ต้องเลื่อนหน้า */
+  .pie-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    max-height: 240px;
+    overflow: hidden;
+  }
   canvas { max-width: 100%; }
+  #ratingPieChart {
+    max-height: 220px;
+    max-width: 220px;
+  }
+
+  /* Star rating breakdown bars */
+  .star-breakdown {
+    margin-top: 20px;
+  }
+  .star-breakdown h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0 0 12px 0;
+    color: #1c1c1c;
+    transition: color 0.3s ease;
+  }
+  .star-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .star-label {
+    min-width: 54px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #374151;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    transition: color 0.3s ease;
+  }
+  .star-icon { font-size: 0.85rem; }
+  .bar-track {
+    flex: 1;
+    height: 14px;
+    background: #e5e7eb;
+    border-radius: 999px;
+    overflow: hidden;
+    transition: background 0.3s ease;
+  }
+  .bar-fill {
+    height: 100%;
+    border-radius: 999px;
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .bar-count {
+    min-width: 50px;
+    font-size: 0.82rem;
+    color: #6b7280;
+    text-align: right;
+    transition: color 0.3s ease;
+  }
+
+  html.dark-mode .star-breakdown h3 {
+    color: #e2e8f0;
+  }
+  html.dark-mode .star-label {
+    color: #cbd5e1;
+  }
+  html.dark-mode .bar-track {
+    background: #374151;
+  }
+  html.dark-mode .bar-count {
+    color: #94a3b8;
+  }
   #status { color: #666; font-size: 0.9rem; transition: color 0.3s ease; }
   #errorBox {
     display: none;
@@ -280,7 +354,14 @@
     <div class="stat-row" id="statRow"></div>
 
     <p id="status">กำลังโหลดข้อมูล...</p>
-    <canvas id="ratingPieChart" height="320"></canvas>
+
+    <!-- Pie Chart (ย่อให้พอดีหน้าจอ) -->
+    <div class="pie-wrapper">
+      <canvas id="ratingPieChart"></canvas>
+    </div>
+
+    <!-- Star Rating Breakdown (ขยายส่วนนี้) -->
+    <div class="star-breakdown" id="starBreakdown"></div>
   </div>
 
   <script type="module">
@@ -387,6 +468,24 @@
         <div class="stat-box"><div class="num">${total}</div><div class="label">รายการทั้งหมด</div></div>
         <div class="stat-box"><div class="num">${avg}</div><div class="label">คะแนนเฉลี่ย</div></div>
       `;
+
+      // Star breakdown bars
+      const starColors = ["#e5484d", "#f0a04b", "#f3c94c", "#8bc34a", "#2f9e44"];
+      const starBreakdown = document.getElementById("starBreakdown");
+      starBreakdown.innerHTML = `<h3>คะแนนแต่ละดาว</h3>` + [5,4,3,2,1].map((star) => {
+        const count = counts[star];
+        const pct = total ? ((count / total) * 100).toFixed(1) : 0;
+        const pctNum = total ? (count / total) * 100 : 0;
+        const color = starColors[star - 1];
+        return `
+          <div class="star-row">
+            <div class="star-label"><span class="star-icon">⭐</span>${star} ดาว</div>
+            <div class="bar-track">
+              <div class="bar-fill" style="width:${pctNum}%; background:${color};"></div>
+            </div>
+            <div class="bar-count">${count} (${pct}%)</div>
+          </div>`;
+      }).join("");
 
       const labels = ["1 ดาว", "2 ดาว", "3 ดาว", "4 ดาว", "5 ดาว"];
       const data = [1, 2, 3, 4, 5].map((n) => counts[n]);
