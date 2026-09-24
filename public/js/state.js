@@ -50,8 +50,8 @@ if (shared?.running && shared?.startedAt) {
 
 export const state = {
   mode: shared?.mode || "pomodoro",
-  preset: shared?.preset || "popular",
-  remaining: restoredRemaining ?? presets.popular.pomodoro * 60,
+  preset: shared?.preset || (location.pathname.includes("adhd") ? "baby" : "popular"),
+  remaining: restoredRemaining ?? presets[shared?.preset || (location.pathname.includes("adhd") ? "baby" : "popular")].pomodoro * 60,
   running: restoredRunning,
   expiredWhileAway: !!(shared?.running && shared?.startedAt && !restoredRunning),
   timerId: null,
