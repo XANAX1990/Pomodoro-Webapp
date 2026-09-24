@@ -48,10 +48,17 @@ if (shared?.running && shared?.startedAt) {
 // (ไม่ใช่แค่ remaining=0 เฉยๆ ตอนเปิดแอปครั้งแรก) ใช้บอก main.js ให้เรียก complete session ย้อนหลัง
 // ไม่งั้นจะโชว์ 00:00 ค้างเฉยๆ ไม่นับรอบ ไม่เล่นเสียง ไม่เปลี่ยนโหมดให้
 
+const isAdhdPage = location.pathname.includes("adhd");
+const defaultPreset = isAdhdPage ? "baby" : "popular";
+// ถ้า shared preset เป็น "baby" แต่ตอนนี้อยู่หน้า index → ไม่รับค่า carry-over
+const resolvedPreset = (shared?.preset && (isAdhdPage || shared.preset !== "baby"))
+  ? shared.preset
+  : defaultPreset;
+
 export const state = {
   mode: shared?.mode || "pomodoro",
-  preset: shared?.preset || (location.pathname.includes("adhd") ? "baby" : "popular"),
-  remaining: restoredRemaining ?? presets[shared?.preset || (location.pathname.includes("adhd") ? "baby" : "popular")].pomodoro * 60,
+  preset: resolvedPreset,
+  remaining: restoredRemaining ?? presets[resolvedPreset].pomodoro * 60,
   running: restoredRunning,
   expiredWhileAway: !!(shared?.running && shared?.startedAt && !restoredRunning),
   timerId: null,
