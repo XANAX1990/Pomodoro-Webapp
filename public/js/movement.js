@@ -2,8 +2,7 @@
 
 // เรียงตามขนาด/ความมากของการเคลื่อนไหวร่างกาย จากเล็ก (อยู่กับที่ ขยับน้อย) ไปใหญ่ (ลุกเดิน)
 // ตามที่อาจารย์ผู้เชี่ยวชาญท้วง (เดิมเรียงมั่วไม่มี logic ใดๆ)
-// หมายเหตุ: ตอนนี้แอปสุ่มเลือก 1 ท่าจาก array นี้ (Math.random()) ไม่ได้โชว์เป็นลิสต์ให้ผู้ใช้เห็น
-// การเรียงลำดับจึงไม่กระทบ behavior ของแอป แต่ช่วยให้โค้ดอ่าน/ดูแลง่ายขึ้นตามที่ถูกท้วง
+// แสดงตามลำดับใน array นี้ทีละท่าทุกครั้งที่ popup ขึ้น (เล็ก -> ใหญ่) แล้ววนกลับไปท่าแรกเมื่อครบ
 export const MOVEMENTS = [
   { emoji: "👀", title: "พักสายตา",         desc: "มองออกไปไกลๆ นอกหน้าต่าง 20 วินาที",     secs: 20 },
   { emoji: "🔄", title: "หมุนคอ",           desc: "หมุนคอช้าๆ ซ้าย-ขวา 5 รอบ",              secs: 25 },
@@ -13,6 +12,8 @@ export const MOVEMENTS = [
   { emoji: "🙆", title: "ยืดหลัง",          desc: "เอี้ยวลำตัวซ้าย-ขวา ช้าๆ 5 ครั้ง",        secs: 25 },
   { emoji: "🚶", title: "เดินรอบห้อง",      desc: "ลุกเดินรอบห้องหรือเดินในที่ 30 วินาที",    secs: 30 },
 ];
+
+let movementIndex = 0; // ท่าถัดไปที่จะแสดง (รีเซ็ตเป็น 0 ตอนรีโหลดหน้า)
 
 const RING_CIRCUM = 213.6;
 let movementTimerId = null;
@@ -32,7 +33,8 @@ export function showMovementPopup() {
     return;
   }
 
-  const m = MOVEMENTS[Math.floor(Math.random() * MOVEMENTS.length)];
+  const m = MOVEMENTS[movementIndex];
+  movementIndex = (movementIndex + 1) % MOVEMENTS.length;
   document.getElementById("movementEmoji").textContent = m.emoji;
   document.getElementById("movementTitle").textContent = m.title;
   document.getElementById("movementDesc").textContent  = m.desc;
