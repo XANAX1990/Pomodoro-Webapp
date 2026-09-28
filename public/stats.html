@@ -126,10 +126,10 @@
   html.dark-mode .legend-item {
     color: #cbd5e1;
   }
-  /* legend กดได้: มีขีดเส้นใต้ = แสดงใน pie / ไม่มีขีด = ซ่อนจาก pie */
+  /* legend กดได้: ปกติไม่มีเส้น (แสดงใน pie ครบ) — กดแล้วเส้นขีดฆ่าถึงจะโผล่ = ซ่อนดาวนั้นจาก pie */
   .legend-item { cursor: pointer; user-select: none; }
-  .legend-item.selected .legend-label { text-decoration: underline; text-underline-offset: 3px; }
-  .legend-item:not(.selected) { opacity: 0.45; }
+  .legend-item.struck .legend-label { text-decoration: line-through; }
+  .legend-item.struck { opacity: 0.45; }
 
   /* Star rating breakdown bars */
   .star-breakdown {
@@ -423,7 +423,7 @@
     let allDocs = []; // { rating, mode } ดิบจาก Firestore เก็บไว้ในหน่วยความจำ ไม่ต้อง query ซ้ำทุกครั้งที่สลับ filter
     let chart = null;
     let currentFilter = "all";
-    const visibleStars = new Set([1, 2, 3, 4, 5]); // ดาวที่ถูกเลือกให้แสดงใน pie
+    const visibleStars = new Set([1, 2, 3, 4, 5]); // ดาวที่แสดงอยู่ใน pie (ดาวที่ไม่อยู่ใน set = ถูกขีดฆ่า/ซ่อน)
 
     function isDarkMode() {
       return document.documentElement.classList.contains("dark-mode");
@@ -539,7 +539,7 @@
         const count = counts[star];
         const sel = visibleStars.has(star);
         return `
-          <div class="legend-item ${sel ? "selected" : ""}" data-star="${star}" role="button" tabindex="0" aria-pressed="${sel}">
+          <div class="legend-item ${sel ? "" : "struck"}" data-star="${star}" role="button" tabindex="0" aria-pressed="${sel}">
             <div class="legend-dot" style="background:${color};"></div>
             <span class="legend-label">${starLabels[star-1]}</span>
             <span style="color:#9ca3af;font-size:0.8rem;margin-left:2px;">(${count})</span>
@@ -589,7 +589,7 @@
       });
     });
 
-    // กด legend เพื่อเลือกดาวที่จะแสดงใน pie (มีขีด = แสดง, ไม่มีขีด = ซ่อน)
+    // กด legend เพื่อซ่อน/แสดงดาวใน pie (กดแล้วมีเส้นขีดฆ่า = ซ่อน, กดอีกครั้งเส้นหาย = แสดง)
     const pieLegendEl = document.getElementById("pieLegend");
     function toggleStar(el) {
       const item = el.closest(".legend-item");
