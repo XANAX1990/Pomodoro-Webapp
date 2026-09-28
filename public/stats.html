@@ -126,6 +126,10 @@
   html.dark-mode .legend-item {
     color: #cbd5e1;
   }
+  /* legend กดได้: มีขีดเส้นใต้ = แสดงใน pie / ไม่มีขีด = ซ่อนจาก pie */
+  .legend-item { cursor: pointer; user-select: none; }
+  .legend-item.selected .legend-label { text-decoration: underline; text-underline-offset: 3px; }
+  .legend-item:not(.selected) { opacity: 0.45; }
 
   /* Star rating breakdown bars */
   .star-breakdown {
@@ -396,8 +400,7 @@
       <div class="pie-wrapper">
         <canvas id="ratingPieChart"></canvas>
       </div>
-      <!-- ซ่อน legend (1-5 ดาว + จำนวน) ข้าง pie chart — ข้อมูลเดียวกันมีใน Star Rating Breakdown ด้านล่างแล้ว -->
-      <div class="pie-legend" id="pieLegend" hidden style="display:none;"></div>
+      <div class="pie-legend" id="pieLegend"></div>
     </div>
 
     <!-- Star Rating Breakdown (ขยายส่วนนี้) -->
@@ -420,6 +423,7 @@
     let allDocs = []; // { rating, mode } ดิบจาก Firestore เก็บไว้ในหน่วยความจำ ไม่ต้อง query ซ้ำทุกครั้งที่สลับ filter
     let chart = null;
     let currentFilter = "all";
+    const visibleStars = new Set([1, 2, 3, 4, 5]); // ดาวที่ถูกเลือกให้แสดงใน pie
 
     function isDarkMode() {
       return document.documentElement.classList.contains("dark-mode");
@@ -533,16 +537,18 @@
       pieLegend.innerHTML = [1,2,3,4,5].map((star) => {
         const color = starColors[star - 1];
         const count = counts[star];
+        const sel = visibleStars.has(star);
         return `
-          <div class="legend-item">
+          <div class="legend-item ${sel ? "selected" : ""}" data-star="${star}" role="button" tabindex="0" aria-pressed="${sel}">
             <div class="legend-dot" style="background:${color};"></div>
-            <span>${starLabels[star-1]}</span>
+            <span class="legend-label">${starLabels[star-1]}</span>
             <span style="color:#9ca3af;font-size:0.8rem;margin-left:2px;">(${count})</span>
           </div>`;
       }).join("");
 
       const labels = ["1 ดาว", "2 ดาว", "3 ดาว", "4 ดาว", "5 ดาว"];
-      const data = [1, 2, 3, 4, 5].map((n) => counts[n]);
+      const data = [1, 2, 3, 4, 5].map((n) => (visibleStars.has(n) ? counts[n] : 0));
+      const visTotal = data.reduce((a, b) => a + b, 0);
       const colors = ["#e5484d", "#f0a04b", "#f3c94c", "#8bc34a", "#2f9e44"];
 
       if (chart) {
@@ -563,7 +569,8 @@
               callbacks: {
                 label: (item) => {
                   const val = item.raw;
-                  const pct = total ? ((val / total) * 100).toFixed(1) : 0;
+                  const sum = item.dataset.data.reduce((a, b) => a + b, 0);
+                  const pct = sum ? ((val / sum) * 100).toFixed(1) : 0;
                   return `${item.label}: ${val} รายการ (${pct}%)`;
                 },
               },
@@ -580,6 +587,20 @@
         currentFilter = btn.dataset.mode;
         render();
       });
+    });
+
+    // กด legend เพื่อเลือกดาวที่จะแสดงใน pie (มีขีด = แสดง, ไม่มีขีด = ซ่อน)
+    const pieLegendEl = document.getElementById("pieLegend");
+    function toggleStar(el) {
+      const item = el.closest(".legend-item");
+      if (!item) return;
+      const star = Number(item.dataset.star);
+      if (visibleStars.has(star)) visibleStars.delete(star); else visibleStars.add(star);
+      render();
+    }
+    pieLegendEl.addEventListener("click", (e) => toggleStar(e.target));
+    pieLegendEl.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleStar(e.target); }
     });
 
     refreshBtn.addEventListener("click", loadRatings);
