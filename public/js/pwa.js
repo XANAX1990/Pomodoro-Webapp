@@ -37,7 +37,7 @@ export async function registerServiceWorker() {
     getServiceWorkerRegistration();
 
     // พบ SW เวอร์ชันใหม่ → สั่งเข้าควบคุมทันที
-    reg.addEventListener("updatefound", () => {a
+    reg.addEventListener("updatefound", () => {
       const newWorker = reg.installing;
       if (!newWorker) return;
       newWorker.addEventListener("statechange", () => {
