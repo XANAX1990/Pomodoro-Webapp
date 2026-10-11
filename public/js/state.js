@@ -50,12 +50,12 @@ if (shared?.running && shared?.startedAt) {
 
 const isAdhdPage = location.pathname.includes("adhd");
 const defaultPreset = isAdhdPage ? "baby" : "popular";
-// ถ้า shared preset เป็น "baby" แต่ตอนนี้อยู่หน้า index → ไม่รับค่า carry-over
-const resolvedPreset = (shared?.preset && (isAdhdPage || shared.preset !== "baby"))
-  ? shared.preset
-  : defaultPreset;
+// หน้า ADHD เริ่มที่ Beginner เสมอเมื่อ "สลับมาจากหน้า General" — รับ preset ที่ค้างไว้เฉพาะตอน
+// รีโหลดหน้า ADHD เดิม (shared.page === "adhd") ส่วนหน้า General ไม่รับ "baby" ที่ค้างมาจากหน้า ADHD
+const presetCarryOverAllowed = !!shared?.preset &&
+  (isAdhdPage ? shared.page === "adhd" : shared.preset !== "baby");
 // ถ้า preset ถูก override → ต้อง reset remaining ด้วย ไม่งั้นเวลาจะเป็นของ preset เก่า
-const presetCarryOverAllowed = shared?.preset && (isAdhdPage || shared.preset !== "baby");
+const resolvedPreset = presetCarryOverAllowed ? shared.preset : defaultPreset;
 const effectiveRemaining = presetCarryOverAllowed
   ? (restoredRemaining ?? presets[resolvedPreset].pomodoro * 60)
   : presets[resolvedPreset].pomodoro * 60;
@@ -101,6 +101,7 @@ export function saveSharedTimerState() {
   try {
     sessionStorage.setItem(SESSION_KEY, JSON.stringify({
       mode: state.mode,
+      page: isAdhdPage ? "adhd" : "general",
       preset: state.preset,
       remaining: state.remaining,
       running: state.running,
