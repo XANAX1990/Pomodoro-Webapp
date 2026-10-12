@@ -106,7 +106,7 @@ a {
 }
 
 .workspace.tasks-collapsed {
-  grid-template-columns: minmax(0, 1fr) 48px;
+  grid-template-columns: minmax(0, 1fr) 14px;
 }
 
 /* ── Tasks column wrapper (tasks-pane + FAB) ── */
@@ -237,11 +237,11 @@ html.dark-mode .mode-tab.active {
   align-items: center;
   justify-content: center;
   flex-direction: column;
-  width: min(390px, 78vw);
-  min-height: min(470px, 92vw);
+  width: min(310px, 78vw);
+  min-height: min(390px, 92vw);
   border: 1px solid #dbe7fb;
   border-radius: 8px;
-  padding: 26px 24px 24px;
+  padding: 18px 18px 16px;
   background: linear-gradient(180deg, #fbfdff 0%, #eef7f2 100%);
   box-shadow: 0 18px 42px rgba(15, 23, 42, 0.1);
 }
@@ -256,15 +256,15 @@ html.dark-mode .mode-tab.active {
 }
 
 .adhd-time {
-  margin-bottom: 20px;
-  font-size: clamp(48px, 7vw, 72px);
+  margin-bottom: 14px;
+  font-size: clamp(40px, 6vw, 58px);
 }
 
 .hourglass {
   position: relative;
-  width: min(172px, 42vw);
-  height: min(236px, 58vw);
-  margin: 0 auto 20px;
+  width: min(140px, 42vw);
+  height: min(192px, 58vw);
+  margin: 0 auto 14px;
   filter: drop-shadow(0 16px 22px rgba(47, 104, 223, 0.18));
 }
 
@@ -461,11 +461,12 @@ html.dark-mode .mode-tab.active {
 
 /* finishBtn */
 .split-right {
-  background: #d33e95;
+  background: #1b2a5c; /* navy blue */
+  box-shadow: 0 9px 17px rgba(27, 42, 92, 0.3);
 }
 
 .split-right:hover {
-  background: #721250;
+  background: #101a3d;
 }
 
 
@@ -516,11 +517,71 @@ html.dark-mode .mode-tab.active {
   transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
-/* Collapsed state */
+/* Collapsed state — Tasks ถูกเก็บไว้ชิดขอบขวาสุด เหลือแค่แถบบางๆ */
 .tasks-pane.collapsed .tasks-inner {
   opacity: 0;
   pointer-events: none;
   transform: translateX(20px);
+  width: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.tasks-pane.collapsed {
+  overflow: visible;
+  border-left-color: transparent;
+}
+
+/* ปุ่มเป็นแถบบางที่ขอบขวา → เมื่อเอาเมาส์เข้าใกล้ ปุ่มจะเด้งขยายออกมาทางซ้าย */
+.tasks-pane.collapsed .tasks-toggle-btn {
+  left: auto;
+  right: 0;
+  width: 14px;
+  height: 64px;
+  border-radius: 10px 0 0 10px;
+  border-right: 0;
+  border-left: 1px solid #dde4ef;
+  box-shadow: -2px 0 8px rgba(47, 104, 223, 0.12);
+  transition: width 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), height 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+    background 0.15s ease, box-shadow 0.2s ease;
+}
+
+.tasks-pane.collapsed .tasks-toggle-btn svg {
+  opacity: 0;
+  transition: opacity 0.15s ease 0.05s;
+}
+
+/* พื้นที่โซนตรวจจับเมาส์ ให้กว้างกว่าแถบ (ไม่ต้องเล็งเป๊ะ) */
+.workspace.tasks-collapsed .tasks-col::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -48px;
+  width: 48px;
+}
+
+.workspace.tasks-collapsed .tasks-col:hover .tasks-toggle-btn,
+.tasks-pane.collapsed .tasks-toggle-btn:focus-visible {
+  width: 44px;
+  height: 80px;
+  background: #dce8ff;
+  box-shadow: -4px 0 18px rgba(47, 104, 223, 0.28);
+}
+
+.workspace.tasks-collapsed .tasks-col:hover .tasks-toggle-btn svg,
+.tasks-pane.collapsed .tasks-toggle-btn:focus-visible svg {
+  opacity: 1;
+}
+
+html.dark-mode .tasks-pane.collapsed .tasks-toggle-btn {
+  background: #1e293b;
+  border-left-color: #475569;
+  color: #93c5fd;
+}
+
+html.dark-mode .workspace.tasks-collapsed .tasks-col:hover .tasks-toggle-btn {
+  background: #334155;
 }
 
 .tasks-header {
@@ -1720,14 +1781,14 @@ footer a {
   }
 
   .adhd-hourglass-panel {
-    width: min(360px, 88vw);
-    min-height: 430px;
-    padding: 22px 18px;
+    width: min(300px, 88vw);
+    min-height: 360px;
+    padding: 16px 14px;
   }
 
   .hourglass {
-    width: min(150px, 44vw);
-    height: min(210px, 62vw);
+    width: min(124px, 44vw);
+    height: min(172px, 62vw);
   }
 
   .customizer,
@@ -2104,7 +2165,7 @@ html.dark-mode .hourglass-neck {
 
 /* FAB follows when tasks panel collapses */
 body.tasks-collapsed .fab {
-  right: calc(48px + 24px);
+  right: calc(14px + 24px);
 }
 
 .fab:hover {

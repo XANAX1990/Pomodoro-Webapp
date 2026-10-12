@@ -395,13 +395,19 @@ const workspace = document.querySelector(".workspace");
 const iconClose = tasksToggleBtn?.querySelector(".tasks-toggle-icon--close");
 const iconOpen = tasksToggleBtn?.querySelector(".tasks-toggle-icon--open");
 
-let tasksOpen = true;
+// Desktop: เริ่มต้นพับ Tasks ไว้ชิดขอบขวา (เอาเมาส์เข้าใกล้แล้วปุ่มจะเด้งออกมา) / มือถือ: แสดงเต็มใต้ timer
+let tasksOpen = window.matchMedia("(max-width: 900px)").matches;
 
-tasksToggleBtn?.addEventListener("click", () => {
-  tasksOpen = !tasksOpen;
-  tasksPane.classList.toggle("collapsed", !tasksOpen);
-  workspace.classList.toggle("tasks-collapsed", !tasksOpen);
+function applyTasksOpen() {
+  tasksPane?.classList.toggle("collapsed", !tasksOpen);
+  workspace?.classList.toggle("tasks-collapsed", !tasksOpen);
   document.body.classList.toggle("tasks-collapsed", !tasksOpen);
   if (iconClose) iconClose.style.display = tasksOpen ? "" : "none";
   if (iconOpen) iconOpen.style.display = tasksOpen ? "none" : "";
+}
+applyTasksOpen();
+
+tasksToggleBtn?.addEventListener("click", () => {
+  tasksOpen = !tasksOpen;
+  applyTasksOpen();
 });
