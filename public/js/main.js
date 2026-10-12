@@ -395,8 +395,8 @@ const workspace = document.querySelector(".workspace");
 const iconClose = tasksToggleBtn?.querySelector(".tasks-toggle-icon--close");
 const iconOpen = tasksToggleBtn?.querySelector(".tasks-toggle-icon--open");
 
-// Desktop: เริ่มต้นพับ Tasks ไว้ชิดขอบขวา (เอาเมาส์เข้าใกล้แล้วปุ่มจะเด้งออกมา) / มือถือ: แสดงเต็มใต้ timer
-let tasksOpen = window.matchMedia("(max-width: 900px)").matches;
+// Tasks เปิดเป็นค่าเริ่มต้น (กดปุ่มที่ขอบเพื่อพับเก็บชิดขอบขวา แล้วเอาเมาส์เข้าใกล้เพื่อให้ปุ่มเด้งออกมา)
+let tasksOpen = true;
 
 function applyTasksOpen() {
   tasksPane?.classList.toggle("collapsed", !tasksOpen);
