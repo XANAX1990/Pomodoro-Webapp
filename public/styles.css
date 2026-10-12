@@ -128,18 +128,40 @@ a {
 .mode-tabs {
   display: grid;
   grid-template-columns: repeat(3, minmax(110px, 1fr));
+  gap: 6px;
   width: min(560px, 100%);
   margin-bottom: 26px;
+  padding: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(47, 104, 223, 0.10), rgba(0, 143, 82, 0.08));
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  backdrop-filter: blur(14px) saturate(160%);
+  box-shadow: 0 8px 24px rgba(31, 86, 200, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
+/* Glass UI: ปุ่มโปร่งแสง + ขอบ outline */
 .mode-tab {
-  border: 0;
-  border-bottom: 1px solid transparent;
-  padding: 8px 10px 12px;
+  border: 1px solid rgba(47, 104, 223, 0.22);
+  border-radius: 12px;
+  padding: 10px 10px;
   color: var(--green);
-  background: transparent;
+  background: rgba(255, 255, 255, 0.35);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
   font-size: 17px;
   cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+}
+
+.mode-tab:hover {
+  background: rgba(255, 255, 255, 0.6);
+  border-color: rgba(47, 104, 223, 0.45);
+}
+
+.mode-tab:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
 }
 
 .mode-tab b {
@@ -148,7 +170,32 @@ a {
 
 .mode-tab.active {
   color: var(--blue);
-  border-bottom-color: #222;
+  border-color: var(--blue);
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: 0 4px 14px rgba(47, 104, 223, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+html.dark-mode .mode-tabs {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.14), rgba(52, 211, 153, 0.08));
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+html.dark-mode .mode-tab {
+  border-color: rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+html.dark-mode .mode-tab:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(147, 197, 253, 0.5);
+}
+
+html.dark-mode .mode-tab.active {
+  color: #93c5fd;
+  border-color: #93c5fd;
+  background: rgba(147, 197, 253, 0.16);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 
 .timer-circle {
