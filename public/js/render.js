@@ -41,8 +41,21 @@ function updateHourglassProgress() {
 // timer is counting down, so it must stay cheap and must NOT touch the
 // task list — task rendering is handled separately by tasks.js whenever
 // the task data actually changes (see renderTasks()).
+const BASE_TITLE = document.title;
+const MODE_TITLE = { pomodoro: "Pomodoro", rest: "Short Break", long: "Long Break" };
+
+// แสดงเวลาที่เหลือบนแท็บเบราว์เซอร์ — กำลังนับอยู่แสดงไอคอนโหมด, หยุดอยู่แสดงแค่ชื่อแอป
+function updateTabTitle() {
+  const time = formatTime(state.remaining);
+  const label = MODE_TITLE[state.mode] || "";
+  document.title = state.running
+    ? `${time} · ${label}`
+    : `${time} · ${label} (หยุด) | ${BASE_TITLE}`;
+}
+
 export function render() {
   els.timeDisplay.textContent = formatTime(state.remaining);
+  updateTabTitle();
   els.levelName.textContent = presets[state.preset].label;
 
   // New split-button UI: show startBtn when idle, show runningControls when running
