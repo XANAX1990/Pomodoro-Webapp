@@ -8,6 +8,9 @@
     "predeploy": [
       "node scripts/dump-cache-sw.cjs"
     ],
+    "postdeploy": [
+      "node scripts/commit-cache-sw.cjs"
+    ],
     "headers": [
       {
         "source": "**",
