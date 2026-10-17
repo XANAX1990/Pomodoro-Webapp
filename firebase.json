@@ -5,6 +5,9 @@
       "firebase.json",
       "**/.*"
     ],
+    "predeploy": [
+      "node scripts/dump-cache-sw.cjs"
+    ],
     "headers": [
       {
         "source": "**",
