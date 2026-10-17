@@ -1,6 +1,6 @@
 import { tracks } from "./config.js";
 import { state, saveSharedTimerState } from "./state.js";
-import { getFolderName } from "./utils.js";
+import { getFolderName, escapeHtml } from "./utils.js";
 
 let els;
 let bgmAudio = null;
@@ -145,11 +145,11 @@ export function renderPlaylist() {
     const isExpanded = state.playlistExpandedFolders[folder];
 
     folderItem.innerHTML = `
-      <button class="folder-header ${isExpanded ? "expanded" : ""}" data-folder="${folder}">
+      <button class="folder-header ${isExpanded ? "expanded" : ""}" data-folder="${escapeHtml(folder)}">
         <svg class="icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px; margin-right: 6px;">
           <path d="M2 6a2 2 0 012-2h5l2 3h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" fill="rgba(47, 104, 223, 0.1)"></path>
         </svg>
-        <span>${folder}</span>
+        <span>${escapeHtml(folder)}</span>
         <span class="folder-count">(${groupTracks.length})</span>
         <svg class="folder-chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 10px; height: 10px; margin-left: 6px;">
           <polyline points="5,3 11,8 5,13"></polyline>
@@ -165,7 +165,7 @@ export function renderPlaylist() {
                   <polygon points="5,3 19,12 5,21" />
                 </svg>
               ` : ""}
-              <span>${item.track.name}</span>
+              <span>${escapeHtml(item.track.name)}</span>
             </button>
           `;
     }).join("")}

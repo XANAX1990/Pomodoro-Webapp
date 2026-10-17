@@ -1,6 +1,6 @@
 import { presets } from "./config.js";
 import { state, saveSharedTimerState } from "./state.js";
-import { formatTime, durationFor } from "./utils.js";
+import { formatTime, durationFor, escapeHtml } from "./utils.js";
 
 let els;
 let onTickRender; // callback into render.js, injected to avoid circular import
@@ -163,8 +163,8 @@ export function buildPresetList() {
   Object.entries(presets).forEach(([key, preset]) => {
     const label = document.createElement("label");
     label.innerHTML = `
-      <input type="radio" name="preset" value="${key}" ${state.preset === key ? "checked" : ""}>
-      <span><strong>${preset.label}</strong><small>${preset.pomodoro} min &bull; ${preset.rest} min &bull; ${preset.long} min</small></span>
+      <input type="radio" name="preset" value="${escapeHtml(key)}" ${state.preset === key ? "checked" : ""}>
+      <span><strong>${escapeHtml(preset.label)}</strong><small>${preset.pomodoro} min &bull; ${preset.rest} min &bull; ${preset.long} min</small></span>
     `;
     els.presetList.append(label);
   });
