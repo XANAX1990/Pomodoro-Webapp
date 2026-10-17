@@ -177,7 +177,7 @@ service cloud.firestore {
 
 **Web App Manifest (`manifest.json`)** — กำหนดชื่อ, ไอคอน, สีธีม, และ shortcut ไปหน้า ADHD Mode ทำให้ browser รู้จักแอปและแสดงปุ่ม "Install" ใน address bar
 
-**Service Worker (`service-worker.js`)** — Cache ไฟล์โค้ดทั้งหมด (HTML/JS/CSS ใช้ network-first, ไอคอนใช้ cache-first) ไว้ใน browser เพื่อให้แอปทำงานได้แม้ไม่มีอินเทอร์เน็ต (ยกเว้นไฟล์เสียงที่มีขนาดใหญ่) และจัดการ cache version เพื่อรับการอัปเดตใหม่อัตโนมัติ
+**Service Worker (`service-worker.js`)** — Cache ไฟล์โค้ดทั้งหมด (HTML/JS/CSS ใช้ network-first, ไอคอนใช้ cache-first) ไว้ใน browser เพื่อให้แอปทำงานได้แม้ไม่มีอินเทอร์เน็ต (ยกเว้นไฟล์เสียงที่มีขนาดใหญ่) และจัดการ cache version เพื่อรับการอัปเดตใหม่อัตโนมัติ โดยชื่อ cache (`CACHE_NAME`) จะถูกเปลี่ยนเป็น `pomodoro-YYYYMMDDHHMM` อัตโนมัติทุกครั้งที่ deploy ผ่าน predeploy hook ของ Firebase (`scripts/dump-cache-sw.cjs`) และหลัง deploy สำเร็จ postdeploy hook (`scripts/commit-cache-sw.cjs`) จะ commit เฉพาะไฟล์ `service-worker.js` ให้โดยไม่ push
 
 **Web Notifications API (`pwa.js`)** — ขอ permission จากผู้ใช้ และส่ง notification เมื่อ timer จบทุกโหมด แม้ผู้ใช้จะพลิกหน้าจอหรือเปิด application อื่นอยู่
 
@@ -202,6 +202,7 @@ service cloud.firestore {
 ขั้นตอนที่ 5  เชื่อมต่อฐานข้อมูลและ Deploy
                └─ Firebase Firestore: บันทึกผลประเมิน Star Rating
                └─ Firebase Hosting: Deploy Static Site
+               └─ ตั้ง predeploy/postdeploy hook: bump CACHE_NAME ก่อน deploy และ commit ให้อัตโนมัติหลัง deploy
 
 ขั้นตอนที่ 6  พัฒนา PWA
                └─ Web App Manifest, Service Worker, Web Notifications

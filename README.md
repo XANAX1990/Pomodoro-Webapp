@@ -14,7 +14,10 @@ Result of project is : Grade C
 
 ```
 .
-├── firebase.json           # Firebase Hosting config (public = public/) + security headers + CSP
+├── firebase.json           # Firebase Hosting config (public = public/) + security headers + CSP + predeploy/postdeploy hooks
+├── scripts/
+│   ├── dump-cache-sw.cjs   # predeploy: bump CACHE_NAME ใน service-worker.js
+│   └── commit-cache-sw.cjs # postdeploy: commit service-worker.js ที่ถูก bump (ไม่ push)
 ├── package.json            # dependency: firebase (อยู่ใน .gitignore แต่ถูก track ไว้แล้ว)
 ├── workflow.md             # (อยู่ใน .gitignore แต่ถูก track ไว้แล้ว) เอกสารรายงานปริญญานิพนธ์ บทที่ 3
 ├── README.md
@@ -123,6 +126,17 @@ python -m http.server 8000
 > ⚠️ ต้องเปิดผ่าน HTTP (ไม่ใช่ `file://`) เพราะใช้ ES Modules + Service Worker
 > Deploy: `firebase deploy --only hosting` (public dir = `public`)
 
+### 🔄 Auto cache bump + commit ตอน deploy
+เพื่อให้ผู้ใช้เดิมได้โค้ดใหม่ทุกครั้งที่ deploy โดยไม่ต้องจำ bump `CACHE_NAME` เอง `firebase.json` ตั้ง hook ไว้:
+
+| Hook | คำสั่ง | ทำอะไร |
+|------|--------|--------|
+| `predeploy` | `node scripts/dump-cache-sw.cjs` | เปลี่ยน `CACHE_NAME` ใน `public/service-worker.js` เป็น `pomodoro-YYYYMMDDHHMM` (ถ้าหา `CACHE_NAME` ไม่เจอ → exit 1 และ deploy หยุด) |
+| `postdeploy` | `node scripts/commit-cache-sw.cjs` | commit **เฉพาะ** `public/service-worker.js` ด้วยข้อความ `chore: bump service worker cache (...)` — ไม่ push, ข้ามถ้าไม่มีการเปลี่ยนแปลง, ถ้า commit ล้มเหลวจะแค่เตือน ไม่ทำให้ deploy ถูกมองว่าล้ม |
+
+> สคริปต์อยู่ที่ `scripts/` ระดับ root (ไม่ใช่ใน `public/`) เพื่อไม่ให้ถูก deploy ขึ้นเว็บ  
+> ถ้า deploy ล้มกลางทาง `postdeploy` จะไม่รัน — ไฟล์ที่ bump ค้างไว้จะถูก commit ตอน deploy ครั้งถัดไป
+
 ---
 
 ## 🔥 Firebase
@@ -197,7 +211,7 @@ reCAPTCHA Enterprise → App Check → Anonymous Authentication → Firestore Se
 | `pomodoroSharedTimerState` | `mode, preset, remaining, running, startedAt, remainingAtStart, counts, nextMilestoneAt, selectedTrack, musicPlaying, muted, volume` — ใช้ให้ timer/เพลงต่อเนื่องเมื่อสลับ index ↔ adhd |
 
 ### Service Worker cache
-`CACHE_NAME` ปัจจุบัน `pomodoro-28-09-2026-notifications` — precache HTML/CSS/JS/ไอคอน และ Firebase SDK 12.14.0 จาก gstatic
+`CACHE_NAME` ถูก bump อัตโนมัติทุกครั้งที่ `firebase deploy` (รูปแบบ `pomodoro-YYYYMMDDHHMM` ดูหัวข้อ Auto cache bump) — precache HTML/CSS/JS/ไอคอน และ Firebase SDK 12.14.0 จาก gstatic
 - HTML/JS/CSS → **network-first** (fallback เป็น cache เมื่อออฟไลน์)
 - ไอคอน/manifest → cache-first
 - `/assets/*` (เพลง/เสียง), Firebase live API, googleapis, cdnjs → ไม่ผ่าน cache
